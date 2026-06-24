@@ -8,6 +8,7 @@ import AdminLogin from '@/pages/AdminLogin'
 import AdminOrders from '@/pages/AdminOrders'
 import AdminProductEdit from '@/pages/AdminProductEdit'
 import AdminProductNew from '@/pages/AdminProductNew'
+import AdminBulkImport from '@/pages/AdminBulkImport'
 import AdminProducts from '@/pages/AdminProducts'
 import Cart from '@/pages/Cart'
 import Home from '@/pages/Home'
@@ -36,6 +37,7 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="products/new" element={<AdminProductNew />} />
+        <Route path="products/import" element={<AdminBulkImport />} />
         <Route path="products/:id/edit" element={<AdminProductEdit />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="categories" element={<AdminCategories />} />

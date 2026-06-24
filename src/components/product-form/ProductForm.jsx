@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router-dom'
 import ProductBasicFields from '@/components/product-form/ProductBasicFields'
 import ProductCategoryField from '@/components/product-form/ProductCategoryField'
 import ProductImageField from '@/components/product-form/ProductImageField'
@@ -14,6 +15,7 @@ import { createProduct, updateProduct } from '@/utils/products'
 import { uploadProductImage } from '@/utils/storage'
 
 export default function ProductForm({ product, onSaved }) {
+  const navigate = useNavigate()
   const { shopId } = useShop()
   const { categories, loading: categoriesLoading, error: categoriesError, createCategory } =
     useCategories(shopId)

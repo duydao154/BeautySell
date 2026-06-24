@@ -14,6 +14,9 @@ export default function AdminDashboard() {
         <Link to="/admin/products" className="card card-link px-4 py-3 text-sm font-medium">
           Manage products
         </Link>
+        <Link to="/admin/products/import" className="card card-link px-4 py-3 text-sm font-medium">
+          Bulk import
+        </Link>
         <Link to="/admin/orders" className="card card-link px-4 py-3 text-sm font-medium">
           Orders
         </Link>

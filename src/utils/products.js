@@ -19,6 +19,14 @@ export async function createProduct(payload) {
   unwrap(await supabase.from('products').insert(payload))
 }
 
+export async function createProductsBatch(records, batchSize = 500) {
+  for (let index = 0; index < records.length; index += batchSize) {
+    const chunk = records.slice(index, index + batchSize)
+    unwrap(await supabase.from('products').insert(chunk))
+  }
+}
+
+
 export async function updateProduct(id, payload) {
   unwrap(await supabase.from('products').update(payload).eq('id', id))
 }

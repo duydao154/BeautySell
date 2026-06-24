@@ -59,11 +59,16 @@ export default function AdminProducts() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="page-title">Products</h1>
-        <Link to="/admin/products/new" className="btn btn-primary">
-          Add Product
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/admin/products/import" className="btn btn-outline">
+            Bulk Import
+          </Link>
+          <Link to="/admin/products/new" className="btn btn-primary">
+            Add Product
+          </Link>
+        </div>
       </div>
 
       {error && (

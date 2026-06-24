@@ -28,7 +28,7 @@ export default function ProductCategoryField({
           <button
             type="button"
             onClick={onShowNewCategory}
-            className="link shrink-0 text-sm whitespace-nowrap"
+            className="link shrink-0 text-sm whitespace-nowrap cursor-pointer"
           >
             + Add New Category
           </button>
