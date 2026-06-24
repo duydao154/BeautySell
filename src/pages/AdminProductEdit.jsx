@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import ProductForm from '../components/ProductForm'
-import { supabase } from '../lib/supabaseClient'
+import ProductForm from '@/components/product-form/ProductForm'
+import { fetchProductById } from '@/utils/products'
 
 export default function AdminProductEdit() {
   const { id } = useParams()
@@ -17,22 +17,17 @@ export default function AdminProductEdit() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (cancelled) return
-
-      if (queryError) {
-        setError(queryError.message)
-        setProduct(null)
-      } else {
-        setProduct(data)
+      try {
+        const data = await fetchProductById(id)
+        if (!cancelled) setProduct(data)
+      } catch (queryError) {
+        if (!cancelled) {
+          setError(queryError.message)
+          setProduct(null)
+        }
       }
 
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadProduct()

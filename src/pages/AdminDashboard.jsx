@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useShop } from '../hooks/useShop'
+import { useShop } from '@/hooks/useShop'
 
 export default function AdminDashboard() {
   const { shop } = useShop()

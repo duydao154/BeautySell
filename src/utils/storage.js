@@ -1,11 +1,10 @@
-import { supabase } from './supabaseClient'
+import { supabase } from '@/utils/supabaseClient'
 
 export const PRODUCT_IMAGE_BUCKET =
   import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'product-images'
 
 const STORAGE_PUBLIC_PATH = /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/
 
-/** Pull the object path out of a full Supabase public URL, or return the path as-is. */
 export function extractStoragePath(imageUrlOrPath) {
   if (!imageUrlOrPath) return null
 
@@ -17,10 +16,6 @@ export function extractStoragePath(imageUrlOrPath) {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-/**
- * Turn a stored image_url (full URL or storage path) into a working public URL
- * for the configured bucket.
- */
 export function getProductImageUrl(imageUrlOrPath, options = {}) {
   if (!imageUrlOrPath) return null
 
@@ -41,4 +36,25 @@ export function getProductImageUrl(imageUrlOrPath, options = {}) {
   })
 
   return data.publicUrl
+}
+
+export async function uploadProductImage(file, shopId) {
+  const extension = file.name.split('.').pop() ?? 'jpg'
+  const path = `${shopId}/${crypto.randomUUID()}.${extension}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .upload(path, file)
+
+  if (uploadError) {
+    if (uploadError.message === 'Bucket not found') {
+      throw new Error(
+        `Storage bucket "${PRODUCT_IMAGE_BUCKET}" is missing. Create it in Supabase Storage or set VITE_SUPABASE_STORAGE_BUCKET in .env.local.`,
+      )
+    }
+
+    throw uploadError
+  }
+
+  return getProductImageUrl(path)
 }

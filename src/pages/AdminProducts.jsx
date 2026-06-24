@@ -1,20 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-
-function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(price)
-}
-
-function StatusBadge({ status }) {
-  const isAvailable = status === 'available'
-
-  return (
-    <span className={`badge ${isAvailable ? 'badge-success' : 'badge-sold-out'}`}>
-      {isAvailable ? 'Available' : 'Sold out'}
-    </span>
-  )
-}
+import ProductsTable from '@/components/products/ProductsTable'
+import { deleteProduct, fetchAdminProducts } from '@/utils/products'
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
@@ -29,21 +16,17 @@ export default function AdminProducts() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
-        .from('products')
-        .select('id, name, price, quantity, status')
-        .order('name')
-
-      if (cancelled) return
-
-      if (queryError) {
-        setError(queryError.message)
-        setProducts([])
-      } else {
-        setProducts(data ?? [])
+      try {
+        const data = await fetchAdminProducts()
+        if (!cancelled) setProducts(data)
+      } catch (queryError) {
+        if (!cancelled) {
+          setError(queryError.message)
+          setProducts([])
+        }
       }
 
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadProducts()
@@ -60,16 +43,14 @@ export default function AdminProducts() {
 
     setDeletingId(product.id)
 
-    const { error: deleteError } = await supabase.from('products').delete().eq('id', product.id)
-
-    setDeletingId(null)
-
-    if (deleteError) {
+    try {
+      await deleteProduct(product.id)
+      setProducts((current) => current.filter((item) => item.id !== product.id))
+    } catch (deleteError) {
       setError(deleteError.message)
-      return
+    } finally {
+      setDeletingId(null)
     }
-
-    setProducts((current) => current.filter((item) => item.id !== product.id))
   }
 
   if (loading) {
@@ -94,44 +75,7 @@ export default function AdminProducts() {
       {products.length === 0 ? (
         <p className="text-sm text-muted">No products yet.</p>
       ) : (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td className="font-medium">{product.name}</td>
-                  <td className="text-muted">{formatPrice(product.price)}</td>
-                  <td className="text-muted">{product.quantity}</td>
-                  <td>
-                    <StatusBadge status={product.status} />
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <Link to={`/admin/products/${product.id}/edit`} className="link text-sm">
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(product)}
-                      disabled={deletingId === product.id}
-                      className="text-danger-btn ml-4"
-                    >
-                      {deletingId === product.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ProductsTable products={products} deletingId={deletingId} onDelete={handleDelete} />
       )}
     </div>
   )

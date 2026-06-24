@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import ProductCard from '../components/ProductCard'
-import { supabase } from '../lib/supabaseClient'
+import ProductCard from '@/components/products/ProductCard'
+import { fetchPublicProductsByShopSlug } from '@/utils/products'
+import { fetchShopBySlug } from '@/utils/shops'
 
 export default function ShopStorefront() {
   const { slug } = useParams()
@@ -19,42 +20,24 @@ export default function ShopStorefront() {
       setShop(null)
       setProducts([])
 
-      const { data: shopData, error: shopError } = await supabase
-        .from('shops')
-        .select('id, name, slug')
-        .eq('slug', slug)
-        .maybeSingle()
+      try {
+        const shopData = await fetchShopBySlug(slug)
+        if (cancelled) return
 
-      if (cancelled) return
+        if (!shopData) {
+          setLoading(false)
+          return
+        }
 
-      if (shopError) {
-        setError(shopError.message)
-        setLoading(false)
-        return
+        setShop(shopData)
+
+        const productData = await fetchPublicProductsByShopSlug(slug)
+        if (!cancelled) setProducts(productData)
+      } catch (queryError) {
+        if (!cancelled) setError(queryError.message)
       }
 
-      if (!shopData) {
-        setLoading(false)
-        return
-      }
-
-      setShop(shopData)
-
-      const { data: productData, error: productError } = await supabase
-        .from('products_public')
-        .select('id, name, price, status, image_url, shop_slug')
-        .eq('shop_slug', slug)
-        .order('name')
-
-      if (cancelled) return
-
-      if (productError) {
-        setError(productError.message)
-      } else {
-        setProducts(productData ?? [])
-      }
-
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadStorefront()

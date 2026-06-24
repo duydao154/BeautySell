@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { ShopProvider } from '../context/ShopProvider'
-import { useAuth } from '../hooks/useAuth'
-import { useShop } from '../hooks/useShop'
+import { ShopProvider } from '@/context/ShopProvider'
+import { useAuth } from '@/hooks/useAuth'
+import { useShop } from '@/hooks/useShop'
+import { signOut } from '@/utils/auth'
 
 const navLinkClass = ({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`
 
@@ -23,7 +23,7 @@ function AdminLayoutShell() {
 
   async function handleSignOut() {
     setSigningOut(true)
-    await supabase.auth.signOut()
+    await signOut()
     navigate('/admin/login', { replace: true })
   }
 

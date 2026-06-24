@@ -1,5 +1,5 @@
-import { supabase } from './supabaseClient'
-import { buildOrderMessage, normalizeWhatsAppNumber } from './orderMessage'
+import { supabase } from '@/utils/supabaseClient'
+import { buildOrderMessage, normalizeWhatsAppNumber } from '@/utils/orderMessage'
 
 /**
  * @param {{

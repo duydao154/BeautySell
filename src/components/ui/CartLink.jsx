@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { selectCartItemCount, useCartStore } from '../store/cartStore'
+import { selectCartItemCount, useCartStore } from '@/store/cartStore'
 
 export default function CartLink() {
   const itemCount = useCartStore(selectCartItemCount)

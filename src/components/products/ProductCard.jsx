@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
-import { getProductImageUrl } from '../lib/productImageUrl'
-
-function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(price)
-}
+import { formatPrice } from '@/utils/format'
+import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductCard({ product, shopSlug }) {
   const isSoldOut = product.status === 'sold_out'

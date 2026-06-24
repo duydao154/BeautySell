@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { useShop } from '../hooks/useShop'
+import CategoryList from '@/components/categories/CategoryList'
+import { useShop } from '@/hooks/useShop'
+import { deleteCategory, fetchCategoriesByShopId } from '@/utils/categories'
 
 export default function AdminCategories() {
   const { shopId } = useShop()
@@ -18,22 +19,17 @@ export default function AdminCategories() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('shop_id', shopId)
-        .order('name')
-
-      if (cancelled) return
-
-      if (queryError) {
-        setError(queryError.message)
-        setCategories([])
-      } else {
-        setCategories(data ?? [])
+      try {
+        const data = await fetchCategoriesByShopId(shopId)
+        if (!cancelled) setCategories(data)
+      } catch (queryError) {
+        if (!cancelled) {
+          setError(queryError.message)
+          setCategories([])
+        }
       }
 
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadCategories()
@@ -54,16 +50,14 @@ export default function AdminCategories() {
 
     setDeletingId(category.id)
 
-    const { error: deleteError } = await supabase.from('categories').delete().eq('id', category.id)
-
-    setDeletingId(null)
-
-    if (deleteError) {
+    try {
+      await deleteCategory(category.id)
+      setCategories((current) => current.filter((item) => item.id !== category.id))
+    } catch (deleteError) {
       setError(deleteError.message)
-      return
+    } finally {
+      setDeletingId(null)
     }
-
-    setCategories((current) => current.filter((item) => item.id !== category.id))
   }
 
   if (loading) {
@@ -87,24 +81,7 @@ export default function AdminCategories() {
       {categories.length === 0 ? (
         <p className="text-sm text-muted">No categories yet. You can add one when editing a product.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-[var(--color-border)] rounded-[var(--radius-sm)] border border-[var(--color-border)]">
-          {categories.map((category) => (
-            <li
-              key={category.id}
-              className="flex items-center justify-between gap-4 px-4 py-3"
-            >
-              <span className="font-medium">{category.name}</span>
-              <button
-                type="button"
-                onClick={() => handleDelete(category)}
-                disabled={deletingId === category.id}
-                className="text-danger-btn text-sm"
-              >
-                {deletingId === category.id ? 'Deleting…' : 'Delete'}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <CategoryList categories={categories} deletingId={deletingId} onDelete={handleDelete} />
       )}
     </div>
   )

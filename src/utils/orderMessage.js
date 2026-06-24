@@ -1,6 +1,6 @@
-export function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(price)
-}
+import { formatPrice } from '@/utils/format'
+
+export { formatPrice } from '@/utils/format'
 
 export function buildOrderMessage(items, total, orderReference) {
   const lines = items.map(

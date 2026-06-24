@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { openOrderChannel, prepareOrderCheckout } from '../lib/checkoutOrder'
-import { formatPrice } from '../lib/orderMessage'
-import { getProductImageUrl } from '../lib/productImageUrl'
-import { supabase } from '../lib/supabaseClient'
-import { selectCartTotal, useCartStore } from '../store/cartStore'
+import { selectCartTotal, useCartStore } from '@/store/cartStore'
+import { openOrderChannel, prepareOrderCheckout } from '@/utils/checkout'
+import { formatPrice } from '@/utils/format'
+import { fetchShopCheckoutDetails } from '@/utils/shops'
+import { getProductImageUrl } from '@/utils/storage'
 
 /** @typedef {'idle' | 'choose-channel' | 'ready-to-send'} CheckoutStep */
 
@@ -55,20 +55,13 @@ export default function Cart() {
     setLoadingShop(true)
     setCheckoutError('')
 
-    const { data, error } = await supabase
-      .from('shops')
-      .select('whatsapp_number, facebook_page_username')
-      .eq('id', shopId)
-      .single()
-
-    setLoadingShop(false)
-
-    if (error) {
-      throw error
+    try {
+      const data = await fetchShopCheckoutDetails(shopId)
+      setShop(data)
+      return data
+    } finally {
+      setLoadingShop(false)
     }
-
-    setShop(data)
-    return data
   }
 
   async function handleSendOrderClick() {

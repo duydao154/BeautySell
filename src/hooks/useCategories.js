@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { createCategory as createCategoryRecord, fetchCategoriesByShopId } from '@/utils/categories'
 
 export function useCategories(shopId) {
   const [categories, setCategories] = useState([])
@@ -16,17 +16,12 @@ export function useCategories(shopId) {
     setLoading(true)
     setError('')
 
-    const { data, error: queryError } = await supabase
-      .from('categories')
-      .select('id, name')
-      .eq('shop_id', shopId)
-      .order('name')
-
-    if (queryError) {
+    try {
+      const data = await fetchCategoriesByShopId(shopId)
+      setCategories(data)
+    } catch (queryError) {
       setError(queryError.message)
       setCategories([])
-    } else {
-      setCategories(data ?? [])
     }
 
     setLoading(false)
@@ -48,13 +43,7 @@ export function useCategories(shopId) {
   }, [loadCategories])
 
   async function createCategory(name) {
-    const { data, error: insertError } = await supabase
-      .from('categories')
-      .insert({ name: name.trim(), shop_id: shopId })
-      .select('id, name')
-      .single()
-
-    if (insertError) throw insertError
+    const data = await createCategoryRecord(shopId, name)
 
     setCategories((current) =>
       [...current, data].sort((a, b) => a.name.localeCompare(b.name)),

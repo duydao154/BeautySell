@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { useAuth } from '../hooks/useAuth'
-import { ShopContext } from './shopContext'
+import { ShopContext } from '@/context/shopContext'
+import { useAuth } from '@/hooks/useAuth'
+import { fetchShopByOwnerId } from '@/utils/shops'
 
 export function ShopProvider({ children }) {
   const { user } = useAuth()
@@ -25,22 +25,17 @@ export function ShopProvider({ children }) {
       setLoading(true)
       setError(null)
 
-      const { data, error: queryError } = await supabase
-        .from('shops')
-        .select('id, name, slug, owner_id, created_at')
-        .eq('owner_id', user.id)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      if (queryError) {
-        setShop(null)
-        setError(queryError.message)
-      } else {
-        setShop(data)
+      try {
+        const data = await fetchShopByOwnerId(user.id)
+        if (!cancelled) setShop(data)
+      } catch (queryError) {
+        if (!cancelled) {
+          setShop(null)
+          setError(queryError.message)
+        }
       }
 
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     fetchShop()

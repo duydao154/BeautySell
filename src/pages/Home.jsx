@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import { fetchAllShops } from '@/utils/shops'
 
 export default function Home() {
   const [shops, setShops] = useState([])
@@ -14,21 +14,17 @@ export default function Home() {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
-        .from('shops')
-        .select('id, name, slug')
-        .order('name')
-
-      if (cancelled) return
-
-      if (queryError) {
-        setError(queryError.message)
-        setShops([])
-      } else {
-        setShops(data ?? [])
+      try {
+        const data = await fetchAllShops()
+        if (!cancelled) setShops(data)
+      } catch (queryError) {
+        if (!cancelled) {
+          setError(queryError.message)
+          setShops([])
+        }
       }
 
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadShops()

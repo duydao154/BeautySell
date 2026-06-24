@@ -40,6 +40,7 @@ export default function CategorySelect({
             {category.name}
           </option>
         ))}
+        <option value={NEW_CATEGORY_VALUE}>+ New Category</option>
       </select>
 
       {categoriesError && (

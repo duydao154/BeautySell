@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { adminLoginSchema } from '../schemas/adminLoginSchema'
+import { adminLoginSchema } from '@/schemas/adminLoginSchema'
+import { signInWithPassword } from '@/utils/auth'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
@@ -24,17 +24,12 @@ export default function AdminLogin() {
   async function onSubmit({ email, password }) {
     setAuthError('')
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (signInError) {
+    try {
+      await signInWithPassword(email, password)
+      navigate('/admin')
+    } catch (signInError) {
       setAuthError(signInError.message)
-      return
     }
-
-    navigate('/admin')
   }
 
   return (

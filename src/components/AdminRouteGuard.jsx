@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function AdminRouteGuard({ children }) {
   const { isAuthenticated, loading } = useAuth()

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getProductImageUrl } from '../lib/productImageUrl'
-import { supabase } from '../lib/supabaseClient'
-import { useCartStore } from '../store/cartStore'
-
-function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(price)
-}
+import { useCartStore } from '@/store/cartStore'
+import { formatPrice } from '@/utils/format'
+import { fetchPublicProduct } from '@/utils/products'
+import { fetchShopIdBySlug } from '@/utils/shops'
+import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductDetail() {
   const { slug, productId } = useParams()
@@ -25,31 +23,21 @@ export default function ProductDetail() {
       setProduct(null)
       setShopId(null)
 
-      const [productResult, shopResult] = await Promise.all([
-        supabase
-          .from('products_public')
-          .select('*')
-          .eq('id', productId)
-          .eq('shop_slug', slug)
-          .maybeSingle(),
-        supabase.from('shops').select('id').eq('slug', slug).maybeSingle(),
-      ])
+      try {
+        const [productData, resolvedShopId] = await Promise.all([
+          fetchPublicProduct(slug, productId),
+          fetchShopIdBySlug(slug),
+        ])
 
-      if (cancelled) return
+        if (cancelled) return
 
-      if (productResult.error) {
-        setError(productResult.error.message)
-      } else {
-        setProduct(productResult.data)
+        setProduct(productData)
+        setShopId(resolvedShopId)
+      } catch (queryError) {
+        if (!cancelled) setError(queryError.message)
       }
 
-      if (shopResult.error) {
-        setError((current) => current || shopResult.error.message)
-      } else {
-        setShopId(shopResult.data?.id ?? null)
-      }
-
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     loadProduct()

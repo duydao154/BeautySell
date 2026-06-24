@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
-import CartLink from '../components/CartLink'
+import CartLink from '@/components/ui/CartLink'
 
 export default function ShopLayout() {
   return (
