@@ -39,7 +39,7 @@ export async function fetchPublicProductsByShopSlug(slug) {
   const data = unwrap(
     await supabase
       .from('products_public')
-      .select('id, name, price, status, image_url, shop_slug')
+      .select('*')
       .eq('shop_slug', slug)
       .order('name'),
   )
