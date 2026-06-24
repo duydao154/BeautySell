@@ -13,4 +13,7 @@ export const productSchema = z.object({
     }),
   quantity: z.coerce.number().int().min(0, 'Quantity must be 0 or greater'),
   status: z.enum(['available', 'sold_out']),
+  category_id: z
+    .union([z.string().uuid(), z.literal('')])
+    .transform((value) => (value === '' ? null : value)),
 })

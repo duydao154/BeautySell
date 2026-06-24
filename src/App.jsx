@@ -9,6 +9,7 @@ import AdminProducts from './pages/AdminProducts'
 import AdminProductNew from './pages/AdminProductNew'
 import AdminProductEdit from './pages/AdminProductEdit'
 import AdminOrders from './pages/AdminOrders'
+import AdminCategories from './pages/AdminCategories'
 import AdminRouteGuard from './components/AdminRouteGuard'
 import AdminLayout from './layouts/AdminLayout'
 import ShopLayout from './layouts/ShopLayout'
@@ -37,6 +38,7 @@ function App() {
         <Route path="products/new" element={<AdminProductNew />} />
         <Route path="products/:id/edit" element={<AdminProductEdit />} />
         <Route path="orders" element={<AdminOrders />} />
+        <Route path="categories" element={<AdminCategories />} />
       </Route>
     </Routes>
   )

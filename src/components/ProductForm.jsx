@@ -6,6 +6,9 @@ import { uploadProductImage } from '../lib/uploadProductImage'
 import { getProductImageUrl } from '../lib/productImageUrl'
 import { supabase } from '../lib/supabaseClient'
 import { useShop } from '../hooks/useShop'
+import { useCategories } from '../hooks/useCategories'
+import CategorySelect, { NEW_CATEGORY_VALUE } from './CategorySelect'
+import { categoryNameSchema } from '../schemas/categorySchema'
 
 function fieldClass(hasError, type = 'input') {
   return `${type} ${hasError ? `${type}--error` : ''}`
@@ -13,14 +16,22 @@ function fieldClass(hasError, type = 'input') {
 
 export default function ProductForm({ product, onSaved }) {
   const { shopId } = useShop()
+  const { categories, loading: categoriesLoading, error: categoriesError, createCategory } =
+    useCategories(shopId)
   const [imageFile, setImageFile] = useState(null)
   const [saveError, setSaveError] = useState('')
+  const [showNewCategory, setShowNewCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [createCategoryError, setCreateCategoryError] = useState('')
   const isEditing = Boolean(product)
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(productSchema),
@@ -31,8 +42,11 @@ export default function ProductForm({ product, onSaved }) {
       external_link: '',
       quantity: 0,
       status: 'available',
+      category_id: '',
     },
   })
+
+  const categoryId = watch('category_id')
 
   useEffect(() => {
     if (product) {
@@ -43,9 +57,45 @@ export default function ProductForm({ product, onSaved }) {
         external_link: product.external_link ?? '',
         quantity: product.quantity ?? 0,
         status: product.status ?? 'available',
+        category_id: product.category_id ?? '',
       })
     }
   }, [product, reset])
+
+  function handleShowNewCategory() {
+    setShowNewCategory(true)
+    setCreateCategoryError('')
+  }
+
+  async function handleCreateCategory() {
+    setCreateCategoryError('')
+
+    const parsed = categoryNameSchema.safeParse({ name: newCategoryName })
+    if (!parsed.success) {
+      setCreateCategoryError(parsed.error.issues[0]?.message ?? 'Invalid category name')
+      return
+    }
+
+    setCreatingCategory(true)
+
+    try {
+      const category = await createCategory(parsed.data.name)
+      setValue('category_id', category.id, { shouldValidate: true })
+      setNewCategoryName('')
+      setShowNewCategory(false)
+    } catch (error) {
+      setCreateCategoryError(error.message ?? 'Failed to create category')
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
+
+  function handleNewCategoryKeyDown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleCreateCategory()
+    }
+  }
 
   async function onSubmit(values) {
     setSaveError('')
@@ -65,6 +115,7 @@ export default function ProductForm({ product, onSaved }) {
         quantity: values.quantity,
         status: values.status,
         image_url: imageUrl,
+        category_id: values.category_id,
       }
 
       if (isEditing) {
@@ -111,7 +162,7 @@ export default function ProductForm({ product, onSaved }) {
         </label>
         <textarea
           id="description"
-          rows={4}
+          rows={30}
           className={fieldClass(errors.description, 'textarea')}
           {...register('description')}
         />
@@ -148,6 +199,70 @@ export default function ProductForm({ product, onSaved }) {
           />
           {errors.quantity && <p className="field-error">{errors.quantity.message}</p>}
         </div>
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <label htmlFor="category_id" className="label mb-0">
+            Category
+          </label>
+          {!showNewCategory && (
+            <button
+              type="button"
+              onClick={handleShowNewCategory}
+              className="link shrink-0 text-sm whitespace-nowrap"
+            >
+               + Add New Category
+            </button>
+          )}
+        </div>
+        <CategorySelect
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+          categoriesError={categoriesError}
+          value={showNewCategory ? NEW_CATEGORY_VALUE : categoryId}
+          onChange={(value) => setValue('category_id', value, { shouldValidate: true })}
+          onSelectNew={handleShowNewCategory}
+          hasError={Boolean(errors.category_id)}
+          errorMessage={errors.category_id?.message}
+        />
+
+        {showNewCategory && (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(event) => setNewCategoryName(event.target.value)}
+              onKeyDown={handleNewCategoryKeyDown}
+              placeholder="Category name"
+              className="input min-w-0 flex-1"
+              autoFocus
+              disabled={creatingCategory}
+            />
+            <button
+              type="button"
+              onClick={handleCreateCategory}
+              disabled={creatingCategory}
+              className="btn btn-primary shrink-0"
+            >
+              {creatingCategory ? 'Adding…' : 'Add'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNewCategory(false)
+                setNewCategoryName('')
+                setCreateCategoryError('')
+              }}
+              disabled={creatingCategory}
+              className="btn btn-outline shrink-0"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {createCategoryError && <p className="field-error mt-1">{createCategoryError}</p>}
       </div>
 
       <div>

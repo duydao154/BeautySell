@@ -60,6 +60,9 @@ function AdminLayoutShell() {
             <NavLink to="/admin/orders" className={navLinkClass}>
               Orders
             </NavLink>
+            <NavLink to="/admin/categories" className={navLinkClass}>
+              Categories
+            </NavLink>
           </nav>
         )}
       </header>

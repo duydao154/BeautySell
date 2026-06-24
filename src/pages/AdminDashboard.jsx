@@ -17,6 +17,9 @@ export default function AdminDashboard() {
         <Link to="/admin/orders" className="card card-link px-4 py-3 text-sm font-medium">
           Orders
         </Link>
+        <Link to="/admin/categories" className="card card-link px-4 py-3 text-sm font-medium">
+          Manage categories
+        </Link>
       </div>
     </div>
   )
