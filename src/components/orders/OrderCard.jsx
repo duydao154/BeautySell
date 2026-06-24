@@ -28,6 +28,16 @@ export default function OrderCard({
             <OrderStatusBadge status={order.status} />
           </div>
           <p className="mt-2 text-sm text-muted">{formatDate(order.created_at)}</p>
+          {order.customer_name && (
+            <p className="mt-1 text-sm">
+              <span className="text-muted">Name:</span> {order.customer_name}
+            </p>
+          )}
+          {order.contact_value && (
+            <p className="mt-1 text-sm">
+              <span className="text-muted">Contact:</span> {order.contact_value}
+            </p>
+          )}
           <p className="mt-1 text-sm text-muted">
             {items.length} item{items.length === 1 ? '' : 's'}
           </p>

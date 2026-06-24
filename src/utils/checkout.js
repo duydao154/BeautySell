@@ -1,15 +1,17 @@
 import { supabase } from '@/utils/supabaseClient'
-import { buildOrderMessage, normalizeWhatsAppNumber } from '@/utils/orderMessage'
+import { buildOrderMessage } from '@/utils/orderMessage'
 
 /**
  * @param {{
  *   shopId: string
  *   channel: 'whatsapp' | 'facebook'
+ *   customerName: string
+ *   contactValue: string
  *   items: Array<{ productId: string, quantity: number, name: string, price: number }>
  *   shop: { whatsapp_number: string | null, facebook_page_username: string | null }
  * }} params
  */
-export async function prepareOrderCheckout({ shopId, channel, items, shop }) {
+export async function prepareOrderCheckout({ shopId, channel, customerName, contactValue, items, shop }) {
   const p_items = items.map((item) => ({
     product_id: item.productId,
     quantity: item.quantity,
@@ -19,6 +21,8 @@ export async function prepareOrderCheckout({ shopId, channel, items, shop }) {
     p_shop_id: shopId,
     p_channel: channel,
     p_items,
+    p_contact_value: contactValue.trim(),
+    p_customer_name: customerName.trim(),
   })
 
   if (error) {
@@ -36,18 +40,10 @@ export async function prepareOrderCheckout({ shopId, channel, items, shop }) {
   const message = buildOrderMessage(items, total, orderReference)
 
   if (channel === 'whatsapp') {
-    if (!shop.whatsapp_number) {
-      throw new Error('This shop has no WhatsApp number configured.')
-    }
-
-    const number = normalizeWhatsAppNumber(shop.whatsapp_number)
-
     return {
       channel,
       orderReference,
       message,
-      redirectUrl: `https://wa.me/${number}?text=${encodeURIComponent(message)}`,
-      copyBeforeOpen: false,
     }
   }
 

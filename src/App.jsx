@@ -10,7 +10,7 @@ import AdminProductEdit from '@/pages/AdminProductEdit'
 import AdminProductNew from '@/pages/AdminProductNew'
 import AdminBulkImport from '@/pages/AdminBulkImport'
 import AdminProducts from '@/pages/AdminProducts'
-import Cart from '@/pages/Cart'
+import Cart, { CartRedirect } from '@/pages/Cart'
 import Home from '@/pages/Home'
 import ProductDetail from '@/pages/ProductDetail'
 import ShopStorefront from '@/pages/ShopStorefront'
@@ -22,7 +22,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/shop/:slug" element={<ShopStorefront />} />
         <Route path="/shop/:slug/product/:productId" element={<ProductDetail />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/cart/:slug" element={<Cart />} />
+        <Route path="/cart" element={<CartRedirect />} />
       </Route>
 
       <Route path="/admin/login" element={<AdminLogin />} />

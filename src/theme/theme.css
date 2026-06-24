@@ -476,3 +476,31 @@
   color: var(--color-text-on-primary);
   border-color: var(--color-primary);
 }
+
+.checkout-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.checkout-tab {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkout-tab--active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+.checkout-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

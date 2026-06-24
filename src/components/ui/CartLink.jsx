@@ -1,11 +1,22 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { selectCartItemCount, useCartStore } from '@/store/cartStore'
 
 export default function CartLink() {
+  const { slug: routeSlug } = useParams()
   const itemCount = useCartStore(selectCartItemCount)
+  const cartShopSlug = useCartStore((state) => state.items[0]?.shopSlug)
+  const slug = routeSlug ?? cartShopSlug
+
+  if (!slug) {
+    return null
+  }
 
   return (
-    <Link to="/cart" className="cart-link" aria-label={`Cart${itemCount ? `, ${itemCount} items` : ''}`}>
+    <Link
+      to={`/cart/${slug}`}
+      className="cart-link"
+      aria-label={`Cart${itemCount ? `, ${itemCount} items` : ''}`}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
