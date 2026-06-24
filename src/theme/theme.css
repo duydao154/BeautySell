@@ -504,3 +504,22 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.input-prefix-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-prefix-group__prefix {
+  width: auto;
+  min-width: 8.5rem;
+  flex-shrink: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 0;
+}
+
+.input-prefix-group__input {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

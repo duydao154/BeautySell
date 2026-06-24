@@ -1,7 +1,10 @@
 import {
   CHECKOUT_TAB_CONFIG,
+  getWhatsAppCountryConfig,
   isValidContactForChannel,
   isValidCustomerName,
+  sanitizeWhatsAppLocalInput,
+  WHATSAPP_COUNTRY_CODES,
 } from '@/utils/contactValidation'
 
 export default function CheckoutContactForm({
@@ -9,22 +12,24 @@ export default function CheckoutContactForm({
   onTabChange,
   customerName,
   onCustomerNameChange,
+  phoneCountryCode,
+  onPhoneCountryCodeChange,
   contactValue,
   onContactChange,
   onSubmit,
   onCancel,
   submitting,
-  loadingShop,
-  shop,
   checkoutError,
 }) {
-  const whatsappAvailable = true
-  const facebookAvailable = Boolean(shop?.facebook_page_username)
-  const channelAvailable = activeTab === 'whatsapp' ? whatsappAvailable : facebookAvailable
   const fieldConfig = CHECKOUT_TAB_CONFIG[activeTab]
+  const phoneCountry = getWhatsAppCountryConfig(phoneCountryCode)
   const nameValid = isValidCustomerName(customerName)
-  const contactValid = isValidContactForChannel(activeTab, contactValue)
-  const canSubmit = !loadingShop && channelAvailable && nameValid && contactValid && !submitting
+  const contactValid = isValidContactForChannel(activeTab, contactValue, phoneCountryCode)
+  const canSubmit = nameValid && contactValid && !submitting
+
+  function handleWhatsAppChange(value) {
+    onContactChange(sanitizeWhatsAppLocalInput(value))
+  }
 
   return (
     <div className="mt-5 border-t border-[var(--color-border)] pt-5">
@@ -35,7 +40,6 @@ export default function CheckoutContactForm({
           type="button"
           role="tab"
           aria-selected={activeTab === 'whatsapp'}
-          disabled={!whatsappAvailable}
           onClick={() => onTabChange('whatsapp')}
           className={`checkout-tab${activeTab === 'whatsapp' ? ' checkout-tab--active' : ''}`}
         >
@@ -45,7 +49,6 @@ export default function CheckoutContactForm({
           type="button"
           role="tab"
           aria-selected={activeTab === 'facebook'}
-          disabled={!facebookAvailable}
           onClick={() => onTabChange('facebook')}
           className={`checkout-tab${activeTab === 'facebook' ? ' checkout-tab--active' : ''}`}
         >
@@ -53,16 +56,7 @@ export default function CheckoutContactForm({
         </button>
       </div>
 
-      {loadingShop && <p className="mt-3 text-sm text-muted">Loading shop details…</p>}
-
-      {!loadingShop && shop && !facebookAvailable && (
-        <p className="mt-3 text-sm text-muted">
-          Facebook checkout is not set up for this shop. You can still order via WhatsApp.
-        </p>
-      )}
-
-      {!loadingShop && channelAvailable && (
-        <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-4">
           <div>
             <label htmlFor="checkout-name" className="label">
               Your name
@@ -82,19 +76,58 @@ export default function CheckoutContactForm({
             <label htmlFor="checkout-contact" className="label">
               {fieldConfig.label}
             </label>
-            <input
-              id="checkout-contact"
-              type="text"
-              value={contactValue}
-              onChange={(event) => onContactChange(event.target.value)}
-              placeholder={fieldConfig.placeholder}
-              className="input"
-              autoComplete="off"
-              disabled={submitting}
-            />
+            {activeTab === 'whatsapp' ? (
+              <>
+                <div className="input-prefix-group">
+                  <select
+                    id="checkout-phone-code"
+                    value={phoneCountryCode}
+                    onChange={(event) => onPhoneCountryCodeChange(event.target.value)}
+                    className="select input-prefix-group__prefix"
+                    disabled={submitting}
+                    aria-label="Country code"
+                  >
+                    {WHATSAPP_COUNTRY_CODES.map((entry) => (
+                      <option key={entry.code} value={entry.code}>
+                        {entry.label} {entry.locale}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="checkout-contact"
+                    type="tel"
+                    value={contactValue}
+                    onChange={(event) => handleWhatsAppChange(event.target.value)}
+                    placeholder={phoneCountry.example}
+                    className="input input-prefix-group__input"
+                    autoComplete="tel-national"
+                    disabled={submitting}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  Enter your number without the leading 0. Example: {phoneCountry.label}{' '}
+                  {phoneCountry.example.replace(/\s/g, '')}
+                </p>
+              </>
+            ) : (
+              <>
+                <input
+                  id="checkout-contact"
+                  type="url"
+                  value={contactValue}
+                  onChange={(event) => onContactChange(event.target.value)}
+                  placeholder={fieldConfig.placeholder}
+                  className="input"
+                  autoComplete="url"
+                  disabled={submitting}
+                />
+                {fieldConfig.hint && (
+                  <p className="mt-1 text-xs text-muted">{fieldConfig.hint}</p>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      )}
+      </div>
 
       {checkoutError && (
         <div role="alert" className="alert-error mt-3">

@@ -1,5 +1,4 @@
 import { supabase } from '@/utils/supabaseClient'
-import { buildOrderMessage } from '@/utils/orderMessage'
 
 /**
  * @param {{
@@ -8,10 +7,9 @@ import { buildOrderMessage } from '@/utils/orderMessage'
  *   customerName: string
  *   contactValue: string
  *   items: Array<{ productId: string, quantity: number, name: string, price: number }>
- *   shop: { whatsapp_number: string | null, facebook_page_username: string | null }
  * }} params
  */
-export async function prepareOrderCheckout({ shopId, channel, customerName, contactValue, items, shop }) {
+export async function prepareOrderCheckout({ shopId, channel, customerName, contactValue, items }) {
   const p_items = items.map((item) => ({
     product_id: item.productId,
     quantity: item.quantity,
@@ -36,41 +34,8 @@ export async function prepareOrderCheckout({ shopId, channel, customerName, cont
     throw new Error('Order was created but no reference was returned.')
   }
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const message = buildOrderMessage(items, total, orderReference)
-
-  if (channel === 'whatsapp') {
-    return {
-      channel,
-      orderReference,
-      message,
-    }
-  }
-
-  if (!shop.facebook_page_username) {
-    throw new Error('This shop has no Facebook page configured.')
-  }
-
   return {
     channel,
     orderReference,
-    message,
-    redirectUrl: `https://m.me/${shop.facebook_page_username}`,
-    copyBeforeOpen: true,
   }
-}
-
-/**
- * @param {{
- *   message: string
- *   redirectUrl: string
- *   copyBeforeOpen: boolean
- * }} params
- */
-export async function openOrderChannel({ message, redirectUrl, copyBeforeOpen }) {
-  if (copyBeforeOpen) {
-    await navigator.clipboard.writeText(message)
-  }
-
-  window.location.href = redirectUrl
 }

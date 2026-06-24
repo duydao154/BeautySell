@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CheckoutContactForm from '@/components/cart/CheckoutContactForm'
 import { selectCartTotal, useCartStore } from '@/store/cartStore'
-import { openOrderChannel, prepareOrderCheckout } from '@/utils/checkout'
+import { prepareOrderCheckout } from '@/utils/checkout'
+import { getCheckoutContactValue } from '@/utils/contactValidation'
 import { formatPrice } from '@/utils/format'
-import { fetchShopCheckoutDetails } from '@/utils/shops'
 import { getProductImageUrl } from '@/utils/storage'
 
 /** @typedef {'idle' | 'checkout'} CheckoutStep */
@@ -30,10 +30,9 @@ export default function Cart() {
   /** @type {[CheckoutStep, Function]} */
   const [checkoutStep, setCheckoutStep] = useState('idle')
   const [activeTab, setActiveTab] = useState('whatsapp')
+  const [phoneCountryCode, setPhoneCountryCode] = useState('84')
   const [customerName, setCustomerName] = useState('')
   const [contactValue, setContactValue] = useState('')
-  const [shop, setShop] = useState(null)
-  const [loadingShop, setLoadingShop] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
   const [orderSuccess, setOrderSuccess] = useState('')
@@ -63,37 +62,15 @@ export default function Cart() {
   const shopId = items[0].shopId
   const shopSlug = items[0].shopSlug
 
-  async function loadShop() {
-    if (shop) return shop
+  const checkoutChannelLabel = activeTab === 'whatsapp' ? 'WhatsApp' : 'Facebook'
 
-    setLoadingShop(true)
+  function handleStartCheckout() {
     setCheckoutError('')
-
-    try {
-      const data = await fetchShopCheckoutDetails(shopId)
-      setShop(data)
-      return data
-    } finally {
-      setLoadingShop(false)
-    }
-  }
-
-  function pickDefaultTab() {
-    return 'whatsapp'
-  }
-
-  async function handleStartCheckout() {
-    setCheckoutError('')
+    setPhoneCountryCode('84')
     setCustomerName('')
     setContactValue('')
     setCheckoutStep('checkout')
-
-    try {
-      await loadShop()
-      setActiveTab(pickDefaultTab())
-    } catch (error) {
-      setCheckoutError(error.message ?? 'Failed to load shop details.')
-    }
+    setActiveTab(pickDefaultTab())
   }
 
   function handleTabChange(tab) {
@@ -102,30 +79,25 @@ export default function Cart() {
     setCheckoutError('')
   }
 
+  function pickDefaultTab() {
+    return 'whatsapp'
+  }
+
   async function handleSendOrder() {
     setCheckoutError('')
     setSubmitting(true)
 
     try {
-      const shopData = shop ?? (await loadShop())
-
       const prepared = await prepareOrderCheckout({
         shopId,
         channel: activeTab,
         customerName,
-        contactValue,
+        contactValue: getCheckoutContactValue(activeTab, contactValue, phoneCountryCode),
         items,
-        shop: shopData,
       })
 
-      if (prepared.redirectUrl) {
-        await openOrderChannel(prepared)
-        clearCart()
-        return
-      }
-
       setOrderSuccess(
-        `Order #${prepared.orderReference} submitted. The shop will contact you on WhatsApp.`,
+        `Order #${prepared.orderReference} submitted. The shop will contact you on ${checkoutChannelLabel}.`,
       )
       clearCart()
       setCheckoutStep('idle')
@@ -244,13 +216,13 @@ export default function Cart() {
             onTabChange={handleTabChange}
             customerName={customerName}
             onCustomerNameChange={setCustomerName}
+            phoneCountryCode={phoneCountryCode}
+            onPhoneCountryCodeChange={setPhoneCountryCode}
             contactValue={contactValue}
             onContactChange={setContactValue}
             onSubmit={handleSendOrder}
             onCancel={handleCancelCheckout}
             submitting={submitting}
-            loadingShop={loadingShop}
-            shop={shop}
             checkoutError={checkoutError}
           />
         )}
