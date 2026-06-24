@@ -1,17 +1,15 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import path from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-// https://vite.dev/config/
+// Use path.resolve (not import.meta.url): Wrangler's autoconfig parses this
+// file with a limited JS parser that can fail on newer syntax.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve('src'),
     },
   },
 })
