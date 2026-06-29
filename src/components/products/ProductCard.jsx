@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { formatPrice } from '@/utils/format'
+import { useFormatPrice } from '@/hooks/useFormatPrice'
 import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductCard({ product, shopSlug }) {
+  const formatPrice = useFormatPrice()
   const isSoldOut = product.status === 'sold_out'
   const imageUrl = getProductImageUrl(product.image_url)
 

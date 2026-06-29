@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
-import { formatPrice } from '@/utils/format'
+import { useFormatPrice } from '@/hooks/useFormatPrice'
 import { fetchPublicProduct } from '@/utils/products'
 import { fetchShopIdBySlug } from '@/utils/shops'
 import { getProductImageUrl } from '@/utils/storage'
@@ -13,6 +13,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const addItem = useCartStore((state) => state.addItem)
+  const formatPrice = useFormatPrice()
 
   useEffect(() => {
     let cancelled = false

@@ -4,7 +4,7 @@ import CheckoutContactForm from '@/components/cart/CheckoutContactForm'
 import { selectCartTotal, useCartStore } from '@/store/cartStore'
 import { prepareOrderCheckout } from '@/utils/checkout'
 import { getCheckoutContactValue } from '@/utils/contactValidation'
-import { formatPrice } from '@/utils/format'
+import { useFormatPrice } from '@/hooks/useFormatPrice'
 import { getProductImageUrl } from '@/utils/storage'
 
 /** @typedef {'idle' | 'checkout'} CheckoutStep */
@@ -26,6 +26,7 @@ export default function Cart() {
   const removeItem = useCartStore((state) => state.removeItem)
   const clearCart = useCartStore((state) => state.clearCart)
   const total = useCartStore(selectCartTotal)
+  const formatPrice = useFormatPrice()
 
   /** @type {[CheckoutStep, Function]} */
   const [checkoutStep, setCheckoutStep] = useState('idle')

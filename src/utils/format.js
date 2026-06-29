@@ -1,5 +1,7 @@
+import { BASE_CURRENCY, formatDisplayPrice } from '@/utils/currency'
+
 export function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(price)
+  return formatDisplayPrice(price, BASE_CURRENCY)
 }
 
 export function formatDate(value) {
