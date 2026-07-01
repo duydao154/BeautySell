@@ -1,16 +1,17 @@
 import Papa from 'papaparse'
 import { z } from 'zod'
+import { createCodedError } from '@/i18n/codedError'
 import { PRODUCT_CSV_COLUMNS } from '@/utils/bulkImportConstants'
 
 function trimValue(value) {
   return typeof value === 'string' ? value.trim() : (value ?? '')
 }
 
-function parseOptionalUrl(value, fieldLabel) {
+function parseOptionalUrl(value) {
   const trimmed = trimValue(value)
   if (!trimmed) return { value: null, error: null }
   if (!z.url().safeParse(trimmed).success) {
-    return { value: null, error: `${fieldLabel} is not a valid URL` }
+    return { value: null, error: 'invalid_url' }
   }
   return { value: trimmed, error: null }
 }
@@ -20,23 +21,23 @@ function validateRow(row, rowNumber) {
   const name = trimValue(row.name)
 
   if (!name) {
-    errors.push('missing name')
+    errors.push('missing_name')
   }
 
   const priceRaw = trimValue(row.price)
   if (!priceRaw) {
-    errors.push('missing price')
+    errors.push('missing_price')
   } else if (Number.isNaN(Number(priceRaw))) {
-    errors.push('price is not a number')
+    errors.push('price_is_not_a_number')
   } else if (Number(priceRaw) < 0) {
-    errors.push('price must be 0 or greater')
+    errors.push('price_must_be_0_or_greater')
   }
 
   const quantityRaw = trimValue(row.quantity)
   let quantity = 0
   if (quantityRaw) {
     if (!/^\d+$/.test(quantityRaw)) {
-      errors.push('quantity must be a whole number')
+      errors.push('quantity_must_be_a_whole_number')
     } else {
       quantity = Number.parseInt(quantityRaw, 10)
     }
@@ -45,11 +46,11 @@ function validateRow(row, rowNumber) {
   const statusRaw = trimValue(row.status).toLowerCase()
   const status = statusRaw === 'sold_out' ? 'sold_out' : 'available'
 
-  const externalLinkResult = parseOptionalUrl(row.external_link, 'external_link')
-  if (externalLinkResult.error) errors.push(externalLinkResult.error)
+  const externalLinkResult = parseOptionalUrl(row.external_link)
+  if (externalLinkResult.error) errors.push('external_link_invalid_url')
 
-  const imageUrlResult = parseOptionalUrl(row.image_url, 'image_url')
-  if (imageUrlResult.error) errors.push(imageUrlResult.error)
+  const imageUrlResult = parseOptionalUrl(row.image_url)
+  if (imageUrlResult.error) errors.push('image_url_invalid_url')
 
   if (errors.length > 0) {
     return {
@@ -86,7 +87,7 @@ export function parseProductCsvFile(file) {
       skipEmptyLines: true,
       complete: (results) => {
         if (results.errors.length > 0) {
-          reject(new Error(results.errors[0]?.message ?? 'Failed to parse CSV'))
+          reject(createCodedError('errors.parseCsvFailed'))
           return
         }
 
@@ -95,9 +96,9 @@ export function parseProductCsvFile(file) {
 
         if (missingColumns.length > 0) {
           reject(
-            new Error(
-              `CSV is missing required columns: ${missingColumns.join(', ')}. Download the template for the correct format.`,
-            ),
+            createCodedError('bulkImport.missingColumns', {
+              columns: missingColumns.join(', '),
+            }),
           )
           return
         }

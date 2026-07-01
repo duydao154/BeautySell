@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useFormatPrice } from '@/hooks/useFormatPrice'
+import { useI18n } from '@/i18n/useI18n'
 import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductCard({ product, shopSlug }) {
+  const { t } = useI18n()
   const formatPrice = useFormatPrice()
   const isSoldOut = product.status === 'sold_out'
   const imageUrl = getProductImageUrl(product.image_url)
@@ -16,10 +18,12 @@ export default function ProductCard({ product, shopSlug }) {
         {imageUrl ? (
           <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted">No image</div>
+          <div className="flex h-full items-center justify-center text-sm text-muted">
+            {t('common.noImage')}
+          </div>
         )}
         {isSoldOut && (
-          <span className="badge badge-sold-out absolute left-3 top-3">Sold Out</span>
+          <span className="badge badge-sold-out absolute left-3 top-3">{t('product.soldOut')}</span>
         )}
       </div>
       <div className="p-4">

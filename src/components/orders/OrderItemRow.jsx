@@ -1,7 +1,9 @@
-import { getProductImageUrl } from '@/utils/storage'
+import { useI18n } from '@/i18n/useI18n'
 import { formatPrice } from '@/utils/format'
+import { getProductImageUrl } from '@/utils/storage'
 
 export default function OrderItemRow({ item }) {
+  const { t } = useI18n()
   const product = item.products
   const imageUrl = getProductImageUrl(product?.image_url)
 
@@ -11,17 +13,22 @@ export default function OrderItemRow({ item }) {
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={product?.name ?? 'Product'}
+            alt={product?.name ?? t('common.product')}
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-muted">—</div>
+          <div className="flex h-full items-center justify-center text-xs text-muted">
+            {t('common.emDash')}
+          </div>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-medium">{product?.name ?? 'Unknown product'}</p>
+        <p className="font-medium">{product?.name ?? t('product.unknownProduct')}</p>
         <p className="text-sm text-muted">
-          Qty {item.quantity} · {formatPrice(item.price_at_purchase)} each
+          {t('orders.qtyEach', {
+            qty: item.quantity,
+            price: formatPrice(item.price_at_purchase),
+          })}
         </p>
       </div>
       <p className="text-sm font-medium">

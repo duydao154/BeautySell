@@ -2,12 +2,14 @@ import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BulkImportPreview from '@/components/bulk-import/BulkImportPreview'
 import { useShop } from '@/hooks/useShop'
+import { useI18n } from '@/i18n/useI18n'
 import { parseProductCsvFile } from '@/utils/bulkImport'
 import { PRODUCT_CSV_TEMPLATE_PATH } from '@/utils/bulkImportConstants'
 import { importProductsFromCsvRows } from '@/utils/bulkImportProducts'
 
 export default function AdminBulkImport() {
   const { shopId } = useShop()
+  const { t, mapError, plural } = useI18n()
   const fileInputRef = useRef(null)
   const [fileName, setFileName] = useState('')
   const [rows, setRows] = useState(null)
@@ -38,7 +40,7 @@ export default function AdminBulkImport() {
       const parsedRows = await parseProductCsvFile(file)
       setRows(parsedRows)
     } catch (error) {
-      setParseError(error.message ?? 'Failed to parse CSV')
+      setParseError(mapError(error))
       setFileName('')
       if (fileInputRef.current) fileInputRef.current.value = ''
     } finally {
@@ -56,7 +58,7 @@ export default function AdminBulkImport() {
       const count = await importProductsFromCsvRows(rows, shopId)
       setImportedCount(count)
     } catch (error) {
-      setImportError(error.message ?? 'Import failed')
+      setImportError(mapError(error) || t('errors.importFailed'))
     } finally {
       setImporting(false)
     }
@@ -74,20 +76,19 @@ export default function AdminBulkImport() {
   if (importedCount !== null) {
     return (
       <div>
-        <h1 className="page-title">Bulk Import</h1>
+        <h1 className="page-title">{t('admin.bulkImportTitle')}</h1>
         <div className="alert-info mt-6">
-          Successfully imported {importedCount} product{importedCount === 1 ? '' : 's'}.
+          {plural(importedCount, 'admin.importSuccess', 'admin.importSuccess_other', {
+            count: importedCount,
+          })}
         </div>
-        <p className="mt-4 text-sm text-muted">
-          Image URLs from the CSV were saved as links. To upload photos from your device, edit each
-          product individually.
-        </p>
+        <p className="mt-4 text-sm text-muted">{t('admin.importImageHint')}</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/admin/products" className="btn btn-primary">
-            View products
+            {t('admin.viewProducts')}
           </Link>
           <button type="button" onClick={handleReset} className="btn btn-outline">
-            Import another file
+            {t('admin.importAnotherFile')}
           </button>
         </div>
       </div>
@@ -97,29 +98,23 @@ export default function AdminBulkImport() {
   return (
     <div>
       <Link to="/admin/products" className="link text-sm">
-        ← Back to products
+        {t('admin.backToProducts')}
       </Link>
 
-      <h1 className="page-title mt-2">Bulk Import</h1>
-      <p className="page-subtitle">
-        Upload a CSV to add many products at once. Use the template for the correct column format.
-      </p>
+      <h1 className="page-title mt-2">{t('admin.bulkImportTitle')}</h1>
+      <p className="page-subtitle">{t('admin.bulkImportSubtitle')}</p>
 
       <div className="card mt-6 space-y-4 p-5">
         <div>
           <a href={PRODUCT_CSV_TEMPLATE_PATH} download className="link text-sm">
-            Download CSV template
+            {t('admin.downloadTemplate')}
           </a>
-          <p className="mt-2 text-sm text-muted">
-            Columns: name, description, price, quantity, status, category, external_link, image_url.
-            The image_url column is for an already-hosted image link — upload photos from your device
-            later via the edit form.
-          </p>
+          <p className="mt-2 text-sm text-muted">{t('admin.csvColumnsHint')}</p>
         </div>
 
         <div>
           <label htmlFor="csv-file" className="label">
-            CSV file
+            {t('admin.csvFile')}
           </label>
           <input
             ref={fileInputRef}
@@ -130,10 +125,12 @@ export default function AdminBulkImport() {
             disabled={parsing || importing}
             className="file-input"
           />
-          {fileName && <p className="mt-2 text-sm text-muted">Selected: {fileName}</p>}
+          {fileName && (
+            <p className="mt-2 text-sm text-muted">{t('admin.selectedFile', { name: fileName })}</p>
+          )}
         </div>
 
-        {parsing && <p className="text-sm text-muted">Parsing file…</p>}
+        {parsing && <p className="text-sm text-muted">{t('common.parsing')}</p>}
 
         {parseError && (
           <div role="alert" className="alert-error">
@@ -160,8 +157,10 @@ export default function AdminBulkImport() {
               className="btn btn-primary"
             >
               {importing
-                ? 'Importing…'
-                : `Import ${validCount} product${validCount === 1 ? '' : 's'}`}
+                ? t('common.importing')
+                : plural(validCount, 'admin.importProducts', 'admin.importProducts_other', {
+                    count: validCount,
+                  })}
             </button>
             <button
               type="button"
@@ -169,7 +168,7 @@ export default function AdminBulkImport() {
               disabled={importing}
               className="btn btn-outline"
             >
-              Choose a different file
+              {t('admin.chooseDifferentFile')}
             </button>
           </div>
         </>

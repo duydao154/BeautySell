@@ -1,20 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { adminLoginSchema } from '@/schemas/adminLoginSchema'
+import LanguageSelect from '@/components/ui/LanguageSelect'
+import { createAdminLoginSchema } from '@/schemas/adminLoginSchema'
+import { useI18n } from '@/i18n/useI18n'
 import { signInWithPassword } from '@/utils/auth'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
+  const { t, mapError } = useI18n()
   const [authError, setAuthError] = useState('')
+
+  const schema = useMemo(() => createAdminLoginSchema(t), [t])
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(adminLoginSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       email: '',
       password: '',
@@ -28,15 +33,18 @@ export default function AdminLogin() {
       await signInWithPassword(email, password)
       navigate('/admin')
     } catch (signInError) {
-      setAuthError(signInError.message)
+      setAuthError(mapError(signInError))
     }
   }
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12">
+      <div className="mb-4 self-end">
+        <LanguageSelect />
+      </div>
       <div className="card w-full max-w-md p-6">
-        <h1 className="page-title text-center">Admin Login</h1>
-        <p className="page-subtitle text-center">Sign in to access the admin dashboard</p>
+        <h1 className="page-title text-center">{t('admin.loginTitle')}</h1>
+        <p className="page-subtitle text-center">{t('admin.loginSubtitle')}</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5" noValidate>
           {authError && (
@@ -47,7 +55,7 @@ export default function AdminLogin() {
 
           <div>
             <label htmlFor="email" className="label">
-              Email
+              {t('common.email')}
             </label>
             <input
               id="email"
@@ -56,7 +64,7 @@ export default function AdminLogin() {
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? 'email-error' : undefined}
               className={`input ${errors.email ? 'input--error' : ''}`}
-              placeholder="admin@example.com"
+              placeholder={t('admin.emailPlaceholder')}
               {...register('email')}
             />
             {errors.email && (
@@ -68,7 +76,7 @@ export default function AdminLogin() {
 
           <div>
             <label htmlFor="password" className="label">
-              Password
+              {t('common.password')}
             </label>
             <input
               id="password"
@@ -88,7 +96,7 @@ export default function AdminLogin() {
           </div>
 
           <button type="submit" disabled={isSubmitting} className="btn btn-primary btn-block">
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? t('common.signingIn') : t('admin.signIn')}
           </button>
         </form>
       </div>

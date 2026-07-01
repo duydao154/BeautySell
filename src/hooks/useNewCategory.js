@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { categoryNameSchema } from '@/schemas/categorySchema'
+import { createCategoryNameSchema } from '@/schemas/categorySchema'
+import { useI18n } from '@/i18n/useI18n'
 
 export function useNewCategory({ createCategory, onCategoryCreated }) {
+  const { t, mapError } = useI18n()
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
@@ -21,9 +23,10 @@ export function useNewCategory({ createCategory, onCategoryCreated }) {
   async function handleCreateCategory() {
     setCreateCategoryError('')
 
-    const parsed = categoryNameSchema.safeParse({ name: newCategoryName })
+    const schema = createCategoryNameSchema(t)
+    const parsed = schema.safeParse({ name: newCategoryName })
     if (!parsed.success) {
-      setCreateCategoryError(parsed.error.issues[0]?.message ?? 'Invalid category name')
+      setCreateCategoryError(parsed.error.issues[0]?.message ?? t('errors.invalidCategoryName'))
       return
     }
 
@@ -35,7 +38,7 @@ export function useNewCategory({ createCategory, onCategoryCreated }) {
       setNewCategoryName('')
       setShowNewCategory(false)
     } catch (error) {
-      setCreateCategoryError(error.message ?? 'Failed to create category')
+      setCreateCategoryError(mapError(error) || t('errors.failedCreateCategory'))
     } finally {
       setCreatingCategory(false)
     }

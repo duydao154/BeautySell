@@ -1,4 +1,8 @@
+import { useI18n } from '@/i18n/useI18n'
+
 export default function CategoryList({ categories, deletingId, onDelete }) {
+  const { t } = useI18n()
+
   return (
     <ul className="mt-6 divide-y divide-[var(--color-border)] rounded-[var(--radius-sm)] border border-[var(--color-border)]">
       {categories.map((category) => (
@@ -10,7 +14,7 @@ export default function CategoryList({ categories, deletingId, onDelete }) {
             disabled={deletingId === category.id}
             className="text-danger-btn text-sm"
           >
-            {deletingId === category.id ? 'Deleting…' : 'Delete'}
+            {deletingId === category.id ? t('common.deleting') : t('common.delete')}
           </button>
         </li>
       ))}

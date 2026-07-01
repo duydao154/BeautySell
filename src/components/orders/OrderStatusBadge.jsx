@@ -1,12 +1,16 @@
-import { capitalize } from '@/utils/format'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function OrderStatusBadge({ status }) {
+  const { t } = useI18n()
+
   const className =
     status === 'fulfilled'
       ? 'badge badge-fulfilled'
       : status === 'cancelled'
         ? 'badge badge-cancelled'
-        : 'badge badge-pending'
+        : status === 'expired'
+          ? 'badge badge-expired'
+          : 'badge badge-pending'
 
-  return <span className={className}>{capitalize(status)}</span>
+  return <span className={className}>{t(`orderStatus.${status}`)}</span>
 }

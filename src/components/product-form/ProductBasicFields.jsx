@@ -1,14 +1,17 @@
 import FormField from '@/components/ui/FormField'
 import { fieldClass } from '@/components/ui/fieldClass'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function ProductBasicFields({ register, errors }) {
+  const { t } = useI18n()
+
   return (
     <>
-      <FormField id="name" label="Name" error={errors.name?.message}>
+      <FormField id="name" label={t('common.name')} error={errors.name?.message}>
         <input id="name" className={fieldClass(errors.name)} {...register('name')} />
       </FormField>
 
-      <FormField id="description" label="Description" error={errors.description?.message}>
+      <FormField id="description" label={t('common.description')} error={errors.description?.message}>
         <textarea
           id="description"
           rows={30}

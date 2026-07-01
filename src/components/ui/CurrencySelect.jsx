@@ -1,7 +1,10 @@
-import { DISPLAY_CURRENCIES } from '@/utils/currency'
 import { useCurrencyStore } from '@/store/currencyStore'
+import { useI18n } from '@/i18n/useI18n'
+
+const CURRENCY_CODES = ['EUR', 'VND']
 
 export default function CurrencySelect() {
+  const { t } = useI18n()
   const currency = useCurrencyStore((state) => state.currency)
   const setCurrency = useCurrencyStore((state) => state.setCurrency)
 
@@ -10,11 +13,11 @@ export default function CurrencySelect() {
       value={currency}
       onChange={(event) => setCurrency(event.target.value)}
       className="select currency-select"
-      aria-label="Display currency"
+      aria-label={t('common.displayCurrency')}
     >
-      {DISPLAY_CURRENCIES.map((entry) => (
-        <option key={entry.code} value={entry.code}>
-          {entry.label}
+      {CURRENCY_CODES.map((code) => (
+        <option key={code} value={code}>
+          {t(`currency.${code.toLowerCase()}`)}
         </option>
       ))}
     </select>

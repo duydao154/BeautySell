@@ -1,3 +1,4 @@
+import { createCodedError } from '@/i18n/codedError'
 import { resolveCategoryLookup } from '@/utils/categories'
 import {
   buildProductRecords,
@@ -10,7 +11,7 @@ export async function importProductsFromCsvRows(rows, shopId) {
   const validRows = getValidImportRows(rows)
 
   if (validRows.length === 0) {
-    throw new Error('No valid rows to import.')
+    throw createCodedError('errors.noValidImportRows')
   }
 
   const categoryNames = collectDistinctCategoryNames(validRows)

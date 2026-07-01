@@ -1,4 +1,8 @@
+import { mapBulkImportRowError } from '@/i18n/mapBackendError'
+import { useI18n } from '@/i18n/useI18n'
+
 export default function BulkImportPreview({ rows }) {
+  const { t, plural } = useI18n()
   const validCount = rows.filter((row) => row.valid).length
   const invalidCount = rows.length - validCount
 
@@ -6,14 +10,14 @@ export default function BulkImportPreview({ rows }) {
     <div className="mt-6">
       <div className="mb-4 flex flex-wrap gap-4 text-sm">
         <span>
-          <strong>{rows.length}</strong> row{rows.length === 1 ? '' : 's'} parsed
+          {plural(rows.length, 'bulkImport.rowsParsed', 'bulkImport.rowsParsed_other', {
+            count: rows.length,
+          })}
         </span>
-        <span className="text-muted">
-          <strong>{validCount}</strong> ready to import
-        </span>
+        <span className="text-muted">{t('bulkImport.readyToImport', { count: validCount })}</span>
         {invalidCount > 0 && (
           <span className="text-[var(--color-danger)]">
-            <strong>{invalidCount}</strong> invalid
+            {t('bulkImport.invalidCount', { count: invalidCount })}
           </span>
         )}
       </div>
@@ -22,30 +26,35 @@ export default function BulkImportPreview({ rows }) {
         <table className="table">
           <thead>
             <tr>
-              <th>Row</th>
-              <th>Status</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Category</th>
-              <th>Issues</th>
+              <th>{t('common.row')}</th>
+              <th>{t('common.status')}</th>
+              <th>{t('common.name')}</th>
+              <th>{t('common.price')}</th>
+              <th>{t('common.category')}</th>
+              <th>{t('common.issues')}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.rowNumber} className={row.valid ? '' : 'bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)]'}>
+              <tr
+                key={row.rowNumber}
+                className={row.valid ? '' : 'bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)]'}
+              >
                 <td className="text-muted">{row.rowNumber}</td>
                 <td>
                   {row.valid ? (
-                    <span className="badge badge-success">Valid</span>
+                    <span className="badge badge-success">{t('common.valid')}</span>
                   ) : (
-                    <span className="badge badge-sold-out">Invalid</span>
+                    <span className="badge badge-sold-out">{t('common.invalid')}</span>
                   )}
                 </td>
-                <td className="font-medium">{row.raw.name?.trim() || '—'}</td>
-                <td className="text-muted">{row.raw.price?.trim() || '—'}</td>
-                <td className="text-muted">{row.raw.category?.trim() || '—'}</td>
+                <td className="font-medium">{row.raw.name?.trim() || t('common.emDash')}</td>
+                <td className="text-muted">{row.raw.price?.trim() || t('common.emDash')}</td>
+                <td className="text-muted">{row.raw.category?.trim() || t('common.emDash')}</td>
                 <td className="text-sm text-muted">
-                  {row.valid ? '—' : row.errors.join('; ')}
+                  {row.valid
+                    ? t('common.emDash')
+                    : row.errors.map((token) => mapBulkImportRowError(token, t)).join('; ')}
                 </td>
               </tr>
             ))}
@@ -54,9 +63,7 @@ export default function BulkImportPreview({ rows }) {
       </div>
 
       {invalidCount > 0 && (
-        <p className="mt-4 text-sm text-muted">
-          Fix the highlighted rows in your CSV and re-upload. Only valid rows will be imported.
-        </p>
+        <p className="mt-4 text-sm text-muted">{t('bulkImport.fixRowsHint')}</p>
       )}
     </div>
   )

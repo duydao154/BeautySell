@@ -10,7 +10,3 @@ export async function fetchAdminOrders() {
 
   return data ?? []
 }
-
-export async function updateOrderStatus(orderId, status) {
-  unwrap(await supabase.from('orders').update({ status }).eq('id', orderId))
-}

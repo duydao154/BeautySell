@@ -1,17 +1,25 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import OrderCard from '@/components/orders/OrderCard'
-import { capitalize } from '@/utils/format'
-import { fetchAdminOrders, updateOrderStatus } from '@/utils/orders'
+import { useOrderActions } from '@/hooks/useOrderActions'
+import { useI18n } from '@/i18n/useI18n'
+import { fetchAdminOrders } from '@/utils/orders'
 
-const ORDER_STATUSES = ['pending', 'fulfilled', 'cancelled']
+const ORDER_STATUSES = ['pending', 'fulfilled', 'cancelled', 'expired']
 
 export default function AdminOrders() {
+  const { t, mapError } = useI18n()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedOrderId, setExpandedOrderId] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
-  const [updatingOrderId, setUpdatingOrderId] = useState(null)
+  const [actingOrderId, setActingOrderId] = useState(null)
+  const [expiringStale, setExpiringStale] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const refreshOrders = useCallback(() => {
+    setRefreshKey((current) => current + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -25,7 +33,7 @@ export default function AdminOrders() {
         if (!cancelled) setOrders(data)
       } catch (queryError) {
         if (!cancelled) {
-          setError(queryError.message)
+          setError(mapError(queryError))
           setOrders([])
         }
       }
@@ -38,26 +46,21 @@ export default function AdminOrders() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refreshKey, mapError])
+
+  const { expireStaleOrders } = useOrderActions(refreshOrders)
 
   const filteredOrders = useMemo(() => {
     if (statusFilter === 'all') return orders
     return orders.filter((order) => order.status === statusFilter)
   }, [orders, statusFilter])
 
-  async function handleStatusChange(orderId, newStatus) {
-    setUpdatingOrderId(orderId)
-    setError('')
-
+  async function handleExpireStale() {
+    setExpiringStale(true)
     try {
-      await updateOrderStatus(orderId, newStatus)
-      setOrders((current) =>
-        current.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)),
-      )
-    } catch (updateError) {
-      setError(updateError.message)
+      await expireStaleOrders()
     } finally {
-      setUpdatingOrderId(null)
+      setExpiringStale(false)
     }
   }
 
@@ -66,14 +69,14 @@ export default function AdminOrders() {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted">Loading orders…</p>
+    return <p className="text-sm text-muted">{t('orders.loading')}</p>
   }
 
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="page-title">Orders</h1>
-        <div className="flex flex-wrap gap-2">
+        <h1 className="page-title">{t('orders.title')}</h1>
+        <div className="flex flex-wrap items-center gap-2">
           {['all', ...ORDER_STATUSES].map((status) => (
             <button
               key={status}
@@ -81,9 +84,17 @@ export default function AdminOrders() {
               onClick={() => setStatusFilter(status)}
               className={`btn ${statusFilter === status ? 'btn-primary' : 'btn-outline'}`}
             >
-              {status === 'all' ? 'All' : capitalize(status)}
+              {status === 'all' ? t('common.all') : t(`orderStatus.${status}`)}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={handleExpireStale}
+            disabled={expiringStale}
+            className="btn btn-outline"
+          >
+            {expiringStale ? t('common.expiring') : t('orders.expireStale')}
+          </button>
         </div>
       </div>
 
@@ -95,7 +106,7 @@ export default function AdminOrders() {
 
       {filteredOrders.length === 0 ? (
         <div className="alert-info">
-          {orders.length === 0 ? 'No orders yet.' : 'No orders match this filter.'}
+          {orders.length === 0 ? t('orders.empty') : t('orders.noMatchFilter')}
         </div>
       ) : (
         <ul className="space-y-4">
@@ -104,9 +115,10 @@ export default function AdminOrders() {
               key={order.id}
               order={order}
               isExpanded={expandedOrderId === order.id}
-              updatingOrderId={updatingOrderId}
+              actingOrderId={actingOrderId}
               onToggle={toggleExpanded}
-              onStatusChange={handleStatusChange}
+              onRefresh={refreshOrders}
+              onActingChange={setActingOrderId}
             />
           ))}
         </ul>

@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n/useI18n'
+
 export default function NewCategoryForm({
   name,
   creating,
@@ -7,6 +9,8 @@ export default function NewCategoryForm({
   onCancel,
   onKeyDown,
 }) {
+  const { t } = useI18n()
+
   return (
     <div className="mt-2">
       <div className="flex gap-2">
@@ -15,7 +19,7 @@ export default function NewCategoryForm({
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Category name"
+          placeholder={t('admin.categoryNamePlaceholder')}
           className="input min-w-0 flex-1"
           autoFocus
           disabled={creating}
@@ -26,7 +30,7 @@ export default function NewCategoryForm({
           disabled={creating}
           className="btn btn-primary shrink-0"
         >
-          {creating ? 'Adding…' : 'Add'}
+          {creating ? t('common.adding') : t('common.add')}
         </button>
         <button
           type="button"
@@ -34,7 +38,7 @@ export default function NewCategoryForm({
           disabled={creating}
           className="btn btn-outline shrink-0"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
       {error && <p className="field-error mt-1">{error}</p>}

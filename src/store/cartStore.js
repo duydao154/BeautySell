@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getT } from '@/i18n/runtime'
 
 /** @typedef {{
  *   productId: string
@@ -26,9 +27,7 @@ export const useCartStore = create(
         const existingShopId = items[0]?.shopId
 
         if (existingShopId && existingShopId !== item.shopId) {
-          const confirmed = window.confirm(
-            'Your cart has items from another shop — clear it and start fresh here?',
-          )
+          const confirmed = window.confirm(getT()('cart.switchShopConfirm'))
 
           if (!confirmed) {
             return false

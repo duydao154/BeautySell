@@ -1,3 +1,4 @@
+import { createCodedError } from '@/i18n/codedError'
 import { supabase } from '@/utils/supabaseClient'
 
 /**
@@ -31,7 +32,7 @@ export async function prepareOrderCheckout({ shopId, channel, customerName, cont
     typeof data === 'string' ? data : (data?.order_reference ?? data?.reference ?? data)
 
   if (!orderReference) {
-    throw new Error('Order was created but no reference was returned.')
+    throw createCodedError('errors.noOrderReference')
   }
 
   return {

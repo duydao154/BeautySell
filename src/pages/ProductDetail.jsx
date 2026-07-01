@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useFormatPrice } from '@/hooks/useFormatPrice'
+import { useI18n } from '@/i18n/useI18n'
 import { fetchPublicProduct } from '@/utils/products'
 import { fetchShopIdBySlug } from '@/utils/shops'
 import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductDetail() {
   const { slug, productId } = useParams()
+  const { t, mapError } = useI18n()
   const [product, setProduct] = useState(null)
   const [shopId, setShopId] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -35,23 +37,19 @@ export default function ProductDetail() {
         setProduct(productData)
         setShopId(resolvedShopId)
       } catch (queryError) {
-        if (!cancelled) setError(queryError.message)
+        if (!cancelled) setError(mapError(queryError))
       }
 
       if (!cancelled) setLoading(false)
     }
 
     loadProduct()
-
-    return () => {
-      cancelled = true
-    }
-  }, [slug, productId])
+  }, [slug, productId, mapError])
 
   if (loading) {
     return (
       <div className="px-6 py-10">
-        <p className="text-sm text-muted">Loading product…</p>
+        <p className="text-sm text-muted">{t('product.loading')}</p>
       </div>
     )
   }
@@ -69,9 +67,9 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="px-6 py-10">
-        <h1 className="page-title">Product not found</h1>
+        <h1 className="page-title">{t('product.notFound')}</h1>
         <Link to={`/shop/${slug}`} className="link mt-4 inline-block text-sm">
-          ← Back to shop
+          {t('product.backToShop')}
         </Link>
       </div>
     )
@@ -96,7 +94,7 @@ export default function ProductDetail() {
   return (
     <div className="px-6 py-10">
       <Link to={`/shop/${slug}`} className="link text-sm">
-        ← Back to shop
+        {t('product.backToShop')}
       </Link>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -108,10 +106,12 @@ export default function ProductDetail() {
               className={`h-full w-full object-cover ${isSoldOut ? 'card-muted' : ''}`}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted">No image</div>
+            <div className="flex h-full items-center justify-center text-sm text-muted">
+              {t('common.noImage')}
+            </div>
           )}
           {isSoldOut && (
-            <span className="badge badge-sold-out absolute left-4 top-4">Sold Out</span>
+            <span className="badge badge-sold-out absolute left-4 top-4">{t('product.soldOut')}</span>
           )}
         </div>
 
@@ -120,7 +120,7 @@ export default function ProductDetail() {
           <p className="mt-3 text-xl">{formatPrice(product.price)}</p>
 
           {isSoldOut && (
-            <p className="mt-3 text-sm font-medium text-muted">This item is currently sold out.</p>
+            <p className="mt-3 text-sm font-medium text-muted">{t('product.soldOutMessage')}</p>
           )}
 
           {product.description && (
@@ -139,7 +139,7 @@ export default function ProductDetail() {
                 rel="noopener noreferrer"
                 className="link text-sm"
               >
-                View original listing ↗
+                {t('product.viewOriginalListing')}
               </a>
             )}
 
@@ -149,7 +149,7 @@ export default function ProductDetail() {
               onClick={handleAddToCart}
               className="btn btn-primary"
             >
-              Add to Cart
+              {t('product.addToCart')}
             </button>
           </div>
         </div>

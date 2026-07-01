@@ -1,10 +1,13 @@
 import FormField from '@/components/ui/FormField'
 import { fieldClass } from '@/components/ui/fieldClass'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function ProductPricingFields({ register, errors }) {
+  const { t } = useI18n()
+
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <FormField id="price" label="Price" error={errors.price?.message}>
+      <FormField id="price" label={t('common.price')} error={errors.price?.message}>
         <input
           id="price"
           type="number"
@@ -15,7 +18,7 @@ export default function ProductPricingFields({ register, errors }) {
         />
       </FormField>
 
-      <FormField id="quantity" label="Quantity" error={errors.quantity?.message}>
+      <FormField id="quantity" label={t('common.quantity')} error={errors.quantity?.message}>
         <input
           id="quantity"
           type="number"

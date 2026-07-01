@@ -1,3 +1,4 @@
+import { createCodedError } from '@/i18n/codedError'
 import { supabase } from '@/utils/supabaseClient'
 
 export const PRODUCT_IMAGE_BUCKET =
@@ -48,9 +49,7 @@ export async function uploadProductImage(file, shopId) {
 
   if (uploadError) {
     if (uploadError.message === 'Bucket not found') {
-      throw new Error(
-        `Storage bucket "${PRODUCT_IMAGE_BUCKET}" is missing. Create it in Supabase Storage or set VITE_SUPABASE_STORAGE_BUCKET in .env.local.`,
-      )
+      throw createCodedError('errors.storage_bucket_not_found', { bucket: PRODUCT_IMAGE_BUCKET })
     }
 
     throw uploadError

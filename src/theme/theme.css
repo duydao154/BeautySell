@@ -165,6 +165,11 @@
   color: var(--color-sold-out);
 }
 
+.badge-expired {
+  background: color-mix(in srgb, var(--color-text-muted) 12%, white);
+  color: var(--color-text-muted);
+}
+
 .badge-channel-whatsapp {
   background: color-mix(in srgb, var(--color-whatsapp) 15%, white);
   color: color-mix(in srgb, var(--color-whatsapp) 80%, black);
@@ -529,4 +534,21 @@
 .input-prefix-group__input {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-text) 40%, transparent);
+}
+
+.modal {
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
 }

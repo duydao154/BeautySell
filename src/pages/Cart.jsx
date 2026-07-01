@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CheckoutContactForm from '@/components/cart/CheckoutContactForm'
+import { useFormatPrice } from '@/hooks/useFormatPrice'
+import { useI18n } from '@/i18n/useI18n'
 import { selectCartTotal, useCartStore } from '@/store/cartStore'
 import { prepareOrderCheckout } from '@/utils/checkout'
 import { getCheckoutContactValue } from '@/utils/contactValidation'
-import { useFormatPrice } from '@/hooks/useFormatPrice'
 import { getProductImageUrl } from '@/utils/storage'
 
 /** @typedef {'idle' | 'checkout'} CheckoutStep */
@@ -21,6 +22,7 @@ export function CartRedirect() {
 
 export default function Cart() {
   const { slug } = useParams()
+  const { t, mapError } = useI18n()
   const items = useCartStore((state) => state.items)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
@@ -40,6 +42,11 @@ export default function Cart() {
 
   const cartShopSlug = items[0]?.shopSlug
 
+  const checkoutChannelLabel = useMemo(
+    () => (activeTab === 'whatsapp' ? t('cart.whatsapp') : t('cart.facebook')),
+    [activeTab, t],
+  )
+
   if (cartShopSlug && cartShopSlug !== slug) {
     return <Navigate to={`/cart/${cartShopSlug}`} replace />
   }
@@ -47,14 +54,14 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <div className="px-6 py-10">
-        <h1 className="page-title">Cart</h1>
+        <h1 className="page-title">{t('cart.title')}</h1>
         {orderSuccess ? (
           <div className="alert-info mt-8">{orderSuccess}</div>
         ) : (
-          <div className="alert-info mt-8">Your cart is empty.</div>
+          <div className="alert-info mt-8">{t('cart.empty')}</div>
         )}
         <Link to={`/shop/${slug}`} className="link mt-6 inline-block text-sm">
-          ← Back to shop
+          {t('cart.backToShop')}
         </Link>
       </div>
     )
@@ -63,25 +70,19 @@ export default function Cart() {
   const shopId = items[0].shopId
   const shopSlug = items[0].shopSlug
 
-  const checkoutChannelLabel = activeTab === 'whatsapp' ? 'WhatsApp' : 'Facebook'
-
   function handleStartCheckout() {
     setCheckoutError('')
     setPhoneCountryCode('84')
     setCustomerName('')
     setContactValue('')
     setCheckoutStep('checkout')
-    setActiveTab(pickDefaultTab())
+    setActiveTab('whatsapp')
   }
 
   function handleTabChange(tab) {
     setActiveTab(tab)
     setContactValue('')
     setCheckoutError('')
-  }
-
-  function pickDefaultTab() {
-    return 'whatsapp'
   }
 
   async function handleSendOrder() {
@@ -98,7 +99,10 @@ export default function Cart() {
       })
 
       setOrderSuccess(
-        `Order #${prepared.orderReference} submitted. The shop will contact you on ${checkoutChannelLabel}.`,
+        t('cart.orderSuccess', {
+          reference: prepared.orderReference,
+          channel: checkoutChannelLabel,
+        }),
       )
       clearCart()
       setCheckoutStep('idle')
@@ -106,7 +110,7 @@ export default function Cart() {
       setContactValue('')
       setSubmitting(false)
     } catch (error) {
-      setCheckoutError(error.message ?? 'Failed to send order.')
+      setCheckoutError(mapError(error) || t('errors.failedSendOrder'))
       setSubmitting(false)
     }
   }
@@ -122,9 +126,9 @@ export default function Cart() {
   return (
     <div className="px-6 py-10">
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="page-title">Cart</h1>
+        <h1 className="page-title">{t('cart.title')}</h1>
         <button type="button" onClick={clearCart} className="btn btn-outline">
-          Clear cart
+          {t('cart.clearCart')}
         </button>
       </div>
 
@@ -142,7 +146,7 @@ export default function Cart() {
                   <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center text-xs text-muted">
-                    No image
+                    {t('common.noImage')}
                   </div>
                 )}
               </Link>
@@ -155,7 +159,9 @@ export default function Cart() {
                   >
                     {item.name}
                   </Link>
-                  <p className="mt-1 text-sm text-muted">{formatPrice(item.price)} each</p>
+                  <p className="mt-1 text-sm text-muted">
+                    {formatPrice(item.price)} {t('common.each')}
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -163,7 +169,7 @@ export default function Cart() {
                     <button
                       type="button"
                       className="qty-control__btn"
-                      aria-label="Decrease quantity"
+                      aria-label={t('cart.decreaseQty')}
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                     >
                       −
@@ -172,7 +178,7 @@ export default function Cart() {
                     <button
                       type="button"
                       className="qty-control__btn"
-                      aria-label="Increase quantity"
+                      aria-label={t('cart.increaseQty')}
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                     >
                       +
@@ -186,7 +192,7 @@ export default function Cart() {
                     className="text-danger-btn"
                     onClick={() => removeItem(item.productId)}
                   >
-                    Remove
+                    {t('common.remove')}
                   </button>
                 </div>
               </div>
@@ -197,7 +203,7 @@ export default function Cart() {
 
       <div className="card mt-8 p-5">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted">Total</span>
+          <span className="text-sm text-muted">{t('common.total')}</span>
           <span className="text-xl font-semibold">{formatPrice(total)}</span>
         </div>
 
@@ -207,7 +213,7 @@ export default function Cart() {
             onClick={handleStartCheckout}
             className="btn btn-primary btn-block mt-5"
           >
-            Send Order
+            {t('cart.sendOrder')}
           </button>
         )}
 
@@ -230,7 +236,7 @@ export default function Cart() {
       </div>
 
       <Link to={`/shop/${shopSlug}`} className="link mt-6 inline-block text-sm">
-        ← Continue shopping
+        {t('cart.continueShopping')}
       </Link>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
@@ -7,21 +7,32 @@ import ProductCategoryField from '@/components/product-form/ProductCategoryField
 import ProductImageField from '@/components/product-form/ProductImageField'
 import ProductMetaFields from '@/components/product-form/ProductMetaFields'
 import ProductPricingFields from '@/components/product-form/ProductPricingFields'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { useCategories } from '@/hooks/useCategories'
 import { useNewCategory } from '@/hooks/useNewCategory'
 import { useShop } from '@/hooks/useShop'
-import { productSchema } from '@/schemas/productSchema'
+import { useI18n } from '@/i18n/useI18n'
+import { createProductSchema } from '@/schemas/productSchema'
 import { createProduct, updateProduct } from '@/utils/products'
 import { uploadProductImage } from '@/utils/storage'
+
+function needsSoldOutConfirmation(values) {
+  return values.quantity > 0 && values.status === 'sold_out'
+}
 
 export default function ProductForm({ product, onSaved }) {
   const navigate = useNavigate()
   const { shopId } = useShop()
+  const { t, mapError } = useI18n()
   const { categories, loading: categoriesLoading, error: categoriesError, createCategory } =
     useCategories(shopId)
   const [imageFile, setImageFile] = useState(null)
   const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [pendingValues, setPendingValues] = useState(null)
   const isEditing = Boolean(product)
+
+  const schema = useMemo(() => createProductSchema(t), [t])
 
   const {
     register,
@@ -31,7 +42,7 @@ export default function ProductForm({ product, onSaved }) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       description: '',
@@ -74,8 +85,9 @@ export default function ProductForm({ product, onSaved }) {
     }
   }, [product, reset])
 
-  async function onSubmit(values) {
+  async function saveProduct(values) {
     setSaveError('')
+    setSaving(true)
 
     try {
       let imageUrl = product?.image_url ?? null
@@ -103,52 +115,98 @@ export default function ProductForm({ product, onSaved }) {
 
       onSaved()
     } catch (error) {
-      setSaveError(error.message ?? 'Failed to save product')
+      setSaveError(mapError(error) || t('errors.failedSaveProduct'))
+    } finally {
+      setSaving(false)
     }
   }
 
+  function handleFormSubmit(values) {
+    if (needsSoldOutConfirmation(values)) {
+      setPendingValues(values)
+      return
+    }
+
+    saveProduct(values)
+  }
+
+  function handleConfirmSoldOut() {
+    if (!pendingValues) return
+    const values = pendingValues
+    setPendingValues(null)
+    saveProduct(values)
+  }
+
+  const isBusy = isSubmitting || saving
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-xl space-y-5" noValidate>
-      {saveError && (
-        <div role="alert" className="alert-error">
-          {saveError}
+    <>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="mx-auto max-w-xl space-y-5" noValidate>
+        {saveError && (
+          <div role="alert" className="alert-error">
+            {saveError}
+          </div>
+        )}
+
+        <ProductBasicFields register={register} errors={errors} />
+        <ProductPricingFields register={register} errors={errors} />
+
+        <ProductCategoryField
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+          categoriesError={categoriesError}
+          categoryId={categoryId}
+          showNewCategory={showNewCategory}
+          newCategoryName={newCategoryName}
+          creatingCategory={creatingCategory}
+          createCategoryError={createCategoryError}
+          categoryFieldError={errors.category_id?.message}
+          onCategoryChange={(value) => setValue('category_id', value, { shouldValidate: true })}
+          onShowNewCategory={handleShowNewCategory}
+          onNewCategoryNameChange={setNewCategoryName}
+          onCreateCategory={handleCreateCategory}
+          onCancelNewCategory={handleCancelNewCategory}
+          onNewCategoryKeyDown={handleNewCategoryKeyDown}
+        />
+
+        <ProductMetaFields register={register} errors={errors} />
+        <ProductImageField
+          product={product}
+          imageFile={imageFile}
+          onImageFileChange={setImageFile}
+        />
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => navigate('/admin/products')}
+            className="btn btn-primary"
+          >
+            {t('common.cancel')}
+          </button>
+          <button type="submit" disabled={isBusy} className="btn btn-primary">
+            {isBusy
+              ? t('common.saving')
+              : isEditing
+                ? t('admin.updateProduct')
+                : t('admin.createProduct')}
+          </button>
         </div>
-      )}
+      </form>
 
-      <ProductBasicFields register={register} errors={errors} />
-      <ProductPricingFields register={register} errors={errors} />
-
-      <ProductCategoryField
-        categories={categories}
-        categoriesLoading={categoriesLoading}
-        categoriesError={categoriesError}
-        categoryId={categoryId}
-        showNewCategory={showNewCategory}
-        newCategoryName={newCategoryName}
-        creatingCategory={creatingCategory}
-        createCategoryError={createCategoryError}
-        categoryFieldError={errors.category_id?.message}
-        onCategoryChange={(value) => setValue('category_id', value, { shouldValidate: true })}
-        onShowNewCategory={handleShowNewCategory}
-        onNewCategoryNameChange={setNewCategoryName}
-        onCreateCategory={handleCreateCategory}
-        onCancelNewCategory={handleCancelNewCategory}
-        onNewCategoryKeyDown={handleNewCategoryKeyDown}
+      <ConfirmModal
+        open={pendingValues !== null}
+        title={t('product.soldOutStockConfirmTitle')}
+        message={t('product.soldOutStockConfirmMessage', {
+          quantity: pendingValues?.quantity ?? 0,
+        })}
+        cancelLabel={t('common.cancel')}
+        confirmLabel={isEditing ? t('admin.updateProduct') : t('admin.createProduct')}
+        onCancel={() => setPendingValues(null)}
+        onConfirm={handleConfirmSoldOut}
+        confirming={saving}
       />
-
-      <ProductMetaFields register={register} errors={errors} />
-      <ProductImageField
-        product={product}
-        imageFile={imageFile}
-        onImageFileChange={setImageFile}
-      />
-
-      <div className="flex gap-3 pt-2 justify-end">
-        <button type="button" disabled={isSubmitting} onClick={() => navigate('/admin/products')} className="btn btn-primary">Cancel</button>
-        <button type="submit" disabled={isSubmitting} className="btn btn-primary">
-          {isSubmitting ? 'Saving…' : isEditing ? 'Update product' : 'Create product'}
-        </button>
-      </div>
-    </form>
+    </>
   )
 }

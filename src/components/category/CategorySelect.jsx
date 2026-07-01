@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n/useI18n'
+
 const NEW_CATEGORY_VALUE = '__new__'
 
 function fieldClass(hasError, type = 'select') {
@@ -14,6 +16,8 @@ export default function CategorySelect({
   hasError,
   errorMessage,
 }) {
+  const { t } = useI18n()
+
   function handleSelectChange(event) {
     const selected = event.target.value
 
@@ -34,17 +38,19 @@ export default function CategorySelect({
         disabled={categoriesLoading}
         className={`${fieldClass(hasError)} w-full`}
       >
-        <option value="">— No category —</option>
+        <option value={null}>{t('common.select')}</option>
         {categories.map((category) => (
           <option key={category.id} value={category.id}>
             {category.name}
           </option>
         ))}
-        <option value={NEW_CATEGORY_VALUE}>+ New Category</option>
+        <option value={NEW_CATEGORY_VALUE}>{t('admin.newCategory')}</option>
       </select>
 
       {categoriesError && (
-        <p className="field-error mt-1">Failed to load categories: {categoriesError}</p>
+        <p className="field-error mt-1">
+          {t('errors.failedLoadCategories')} {categoriesError}
+        </p>
       )}
       {hasError && errorMessage && <p className="field-error mt-1">{errorMessage}</p>}
     </div>

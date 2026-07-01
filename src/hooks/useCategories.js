@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useI18n } from '@/i18n/useI18n'
 import { createCategory as createCategoryRecord, fetchCategoriesByShopId } from '@/utils/categories'
 
 export function useCategories(shopId) {
+  const { mapError } = useI18n()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -20,12 +22,12 @@ export function useCategories(shopId) {
       const data = await fetchCategoriesByShopId(shopId)
       setCategories(data)
     } catch (queryError) {
-      setError(queryError.message)
+      setError(mapError(queryError))
       setCategories([])
     }
 
     setLoading(false)
-  }, [shopId])
+  }, [shopId, mapError])
 
   useEffect(() => {
     let cancelled = false

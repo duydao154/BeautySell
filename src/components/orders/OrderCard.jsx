@@ -1,17 +1,19 @@
 import ChannelBadge from '@/components/orders/ChannelBadge'
+import OrderActions from '@/components/orders/OrderActions'
 import OrderItemRow from '@/components/orders/OrderItemRow'
 import OrderStatusBadge from '@/components/orders/OrderStatusBadge'
-import { capitalize, formatDate } from '@/utils/format'
-
-const ORDER_STATUSES = ['pending', 'fulfilled', 'cancelled']
+import { useI18n } from '@/i18n/useI18n'
+import { formatDate } from '@/utils/format'
 
 export default function OrderCard({
   order,
   isExpanded,
-  updatingOrderId,
+  actingOrderId,
   onToggle,
-  onStatusChange,
+  onRefresh,
+  onActingChange,
 }) {
+  const { t, plural } = useI18n()
   const items = order.order_items ?? []
 
   return (
@@ -30,16 +32,16 @@ export default function OrderCard({
           <p className="mt-2 text-sm text-muted">{formatDate(order.created_at)}</p>
           {order.customer_name && (
             <p className="mt-1 text-sm">
-              <span className="text-muted">Name:</span> {order.customer_name}
+              <span className="text-muted">{t('orders.nameLabel')}</span> {order.customer_name}
             </p>
           )}
           {order.contact_value && (
             <p className="mt-1 text-sm">
-              <span className="text-muted">Contact:</span> {order.contact_value}
+              <span className="text-muted">{t('orders.contactLabel')}</span> {order.contact_value}
             </p>
           )}
           <p className="mt-1 text-sm text-muted">
-            {items.length} item{items.length === 1 ? '' : 's'}
+            {plural(items.length, 'orders.item', 'orders.items', { count: items.length })}
           </p>
         </div>
         <span className="text-sm text-muted">{isExpanded ? '▲' : '▼'}</span>
@@ -53,26 +55,13 @@ export default function OrderCard({
             ))}
           </ul>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <label htmlFor={`status-${order.id}`} className="text-sm font-medium">
-              Update status
-            </label>
-            <select
-              id={`status-${order.id}`}
-              value={order.status}
-              disabled={updatingOrderId === order.id}
-              onChange={(event) => onStatusChange(order.id, event.target.value)}
-              className="select max-w-xs"
-            >
-              {ORDER_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {capitalize(status)}
-                </option>
-              ))}
-            </select>
-            {updatingOrderId === order.id && (
-              <span className="text-sm text-muted">Saving…</span>
-            )}
+          <div className="mt-5">
+            <OrderActions
+              order={order}
+              onRefresh={onRefresh}
+              actingOrderId={actingOrderId}
+              onActingChange={onActingChange}
+            />
           </div>
         </div>
       )}

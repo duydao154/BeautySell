@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useI18n } from '@/i18n/useI18n'
 import { fetchAllShops } from '@/utils/shops'
 
 export default function Home() {
+  const { t, mapError } = useI18n()
   const [shops, setShops] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -19,7 +21,7 @@ export default function Home() {
         if (!cancelled) setShops(data)
       } catch (queryError) {
         if (!cancelled) {
-          setError(queryError.message)
+          setError(mapError(queryError))
           setShops([])
         }
       }
@@ -28,21 +30,14 @@ export default function Home() {
     }
 
     loadShops()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  }, [mapError])
 
   return (
     <div className="px-6 py-10">
-      <h1 className="page-title">Shops</h1>
-      <p className="page-subtitle">
-        Browse available storefronts. In production, buyers usually arrive via a shop&apos;s direct
-        link.
-      </p>
+      <h1 className="page-title">{t('home.title')}</h1>
+      <p className="page-subtitle">{t('home.subtitle')}</p>
 
-      {loading && <p className="mt-8 text-sm text-muted">Loading shops…</p>}
+      {loading && <p className="mt-8 text-sm text-muted">{t('home.loading')}</p>}
 
       {error && (
         <div role="alert" className="alert-error mt-8">
@@ -51,7 +46,7 @@ export default function Home() {
       )}
 
       {!loading && !error && shops.length === 0 && (
-        <p className="mt-8 text-sm text-muted">No shops available yet.</p>
+        <p className="mt-8 text-sm text-muted">{t('home.empty')}</p>
       )}
 
       {!loading && !error && shops.length > 0 && (

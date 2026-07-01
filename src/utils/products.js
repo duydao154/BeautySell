@@ -4,7 +4,7 @@ export async function fetchAdminProducts() {
   const data = unwrap(
     await supabase
       .from('products')
-      .select('id, name, price, quantity, status, category:categories(name)')
+      .select('id, name, price, quantity, reserved_quantity, status, category:categories(name)')
       .order('name'),
   )
 

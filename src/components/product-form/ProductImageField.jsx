@@ -1,10 +1,13 @@
+import { useI18n } from '@/i18n/useI18n'
 import { getProductImageUrl } from '@/utils/storage'
 
 export default function ProductImageField({ product, imageFile, onImageFileChange }) {
+  const { t } = useI18n()
+
   return (
     <div>
       <label htmlFor="image" className="label">
-        Image
+        {t('common.image')}
       </label>
       {product?.image_url && !imageFile && (
         <img

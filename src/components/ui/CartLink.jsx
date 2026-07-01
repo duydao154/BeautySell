@@ -1,8 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
 import { selectCartItemCount, useCartStore } from '@/store/cartStore'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function CartLink() {
   const { slug: routeSlug } = useParams()
+  const { t } = useI18n()
   const itemCount = useCartStore(selectCartItemCount)
   const cartShopSlug = useCartStore((state) => state.items[0]?.shopSlug)
   const slug = routeSlug ?? cartShopSlug
@@ -15,7 +17,11 @@ export default function CartLink() {
     <Link
       to={`/cart/${slug}`}
       className="cart-link"
-      aria-label={`Cart${itemCount ? `, ${itemCount} items` : ''}`}
+      aria-label={
+        itemCount
+          ? t('nav.cartWithItems', { count: itemCount })
+          : t('nav.cart')
+      }
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

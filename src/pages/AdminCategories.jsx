@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import CategoryList from '@/components/categories/CategoryList'
 import { useShop } from '@/hooks/useShop'
+import { useI18n } from '@/i18n/useI18n'
 import { deleteCategory, fetchCategoriesByShopId } from '@/utils/categories'
 
 export default function AdminCategories() {
   const { shopId } = useShop()
+  const { t, mapError } = useI18n()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -24,7 +26,7 @@ export default function AdminCategories() {
         if (!cancelled) setCategories(data)
       } catch (queryError) {
         if (!cancelled) {
-          setError(queryError.message)
+          setError(mapError(queryError))
           setCategories([])
         }
       }
@@ -33,18 +35,10 @@ export default function AdminCategories() {
     }
 
     loadCategories()
-
-    return () => {
-      cancelled = true
-    }
-  }, [shopId])
+  }, [shopId, mapError])
 
   async function handleDelete(category) {
-    if (
-      !window.confirm(
-        `Delete "${category.name}"? Products in this category will be left without a category.`,
-      )
-    ) {
+    if (!window.confirm(t('admin.deleteCategoryConfirm', { name: category.name }))) {
       return
     }
 
@@ -54,23 +48,20 @@ export default function AdminCategories() {
       await deleteCategory(category.id)
       setCategories((current) => current.filter((item) => item.id !== category.id))
     } catch (deleteError) {
-      setError(deleteError.message)
+      setError(mapError(deleteError))
     } finally {
       setDeletingId(null)
     }
   }
 
   if (loading) {
-    return <p className="text-sm text-muted">Loading categories…</p>
+    return <p className="text-sm text-muted">{t('admin.loadingCategories')}</p>
   }
 
   return (
     <div>
-      <h1 className="page-title">Manage Categories</h1>
-      <p className="page-subtitle">
-        Deleting a category only removes the tag from products — it does not delete the products
-        themselves.
-      </p>
+      <h1 className="page-title">{t('admin.categoriesTitle')}</h1>
+      <p className="page-subtitle">{t('admin.categoriesSubtitle')}</p>
 
       {error && (
         <div role="alert" className="alert-error mb-4">
@@ -79,7 +70,7 @@ export default function AdminCategories() {
       )}
 
       {categories.length === 0 ? (
-        <p className="text-sm text-muted">No categories yet. You can add one when editing a product.</p>
+        <p className="text-sm text-muted">{t('admin.noCategories')}</p>
       ) : (
         <CategoryList categories={categories} deletingId={deletingId} onDelete={handleDelete} />
       )}

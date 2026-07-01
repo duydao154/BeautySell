@@ -1,5 +1,6 @@
 import CategorySelect, { NEW_CATEGORY_VALUE } from '@/components/category/CategorySelect'
 import NewCategoryForm from '@/components/product-form/NewCategoryForm'
+import { useI18n } from '@/i18n/useI18n'
 
 export default function ProductCategoryField({
   categories,
@@ -18,19 +19,21 @@ export default function ProductCategoryField({
   onCancelNewCategory,
   onNewCategoryKeyDown,
 }) {
+  const { t } = useI18n()
+
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label htmlFor="category_id" className="label mb-0">
-          Category
+          {t('common.category')}
         </label>
         {!showNewCategory && (
           <button
             type="button"
             onClick={onShowNewCategory}
-            className="link shrink-0 text-sm whitespace-nowrap cursor-pointer"
+            className="link shrink-0 cursor-pointer text-sm whitespace-nowrap"
           >
-            + Add New Category
+            {t('admin.addNewCategory')}
           </button>
         )}
       </div>

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProductForm from '@/components/product-form/ProductForm'
+import { useI18n } from '@/i18n/useI18n'
 import { fetchProductById } from '@/utils/products'
 
 export default function AdminProductEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t, mapError } = useI18n()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -22,7 +24,7 @@ export default function AdminProductEdit() {
         if (!cancelled) setProduct(data)
       } catch (queryError) {
         if (!cancelled) {
-          setError(queryError.message)
+          setError(mapError(queryError))
           setProduct(null)
         }
       }
@@ -31,23 +33,19 @@ export default function AdminProductEdit() {
     }
 
     loadProduct()
-
-    return () => {
-      cancelled = true
-    }
-  }, [id])
+  }, [id, mapError])
 
   if (loading) {
-    return <p className="text-sm text-muted">Loading product…</p>
+    return <p className="text-sm text-muted">{t('admin.loadingProduct')}</p>
   }
 
   if (error || !product) {
     return (
       <div>
         <Link to="/admin/products" className="link text-sm">
-          ← Back to products
+          {t('admin.backToProducts')}
         </Link>
-        <p className="field-error mt-4">{error || 'Product not found.'}</p>
+        <p className="field-error mt-4">{error || t('product.notFoundAdmin')}</p>
       </div>
     )
   }
@@ -55,9 +53,9 @@ export default function AdminProductEdit() {
   return (
     <div>
       <Link to="/admin/products" className="link text-sm">
-        ← Back to products
+        {t('admin.backToProducts')}
       </Link>
-      <h1 className="page-title mt-2">Edit Product</h1>
+      <h1 className="page-title mt-2">{t('admin.editProduct')}</h1>
       <div className="mt-6">
         <ProductForm product={product} onSaved={() => navigate('/admin/products')} />
       </div>

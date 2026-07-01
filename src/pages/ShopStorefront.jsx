@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import CategoryFilterChips from '@/components/storefront/CategoryFilterChips'
 import ProductCard from '@/components/products/ProductCard'
+import { useI18n } from '@/i18n/useI18n'
 import { fetchPublicProductsByShopSlug } from '@/utils/products'
 import { fetchShopBySlug } from '@/utils/shops'
 import { deriveProductCategories, filterProductsByCategory } from '@/utils/storefrontCategories'
 
 export default function ShopStorefront() {
   const { slug } = useParams()
+  const { t, mapError } = useI18n()
   const [searchParams, setSearchParams] = useSearchParams()
   const [shop, setShop] = useState(null)
   const [products, setProducts] = useState([])
@@ -37,18 +39,14 @@ export default function ShopStorefront() {
         const productData = await fetchPublicProductsByShopSlug(slug)
         if (!cancelled) setProducts(productData)
       } catch (queryError) {
-        if (!cancelled) setError(queryError.message)
+        if (!cancelled) setError(mapError(queryError))
       }
 
       if (!cancelled) setLoading(false)
     }
 
     loadStorefront()
-
-    return () => {
-      cancelled = true
-    }
-  }, [slug])
+  }, [slug, mapError])
 
   const categories = useMemo(() => deriveProductCategories(products), [products])
 
@@ -84,7 +82,7 @@ export default function ShopStorefront() {
   if (loading) {
     return (
       <div className="px-6 py-10">
-        <p className="text-sm text-muted">Loading shop…</p>
+        <p className="text-sm text-muted">{t('shop.loading')}</p>
       </div>
     )
   }
@@ -102,10 +100,10 @@ export default function ShopStorefront() {
   if (!shop) {
     return (
       <div className="px-6 py-10">
-        <h1 className="page-title">Shop not found</h1>
-        <p className="page-subtitle">We couldn&apos;t find a shop at this address.</p>
+        <h1 className="page-title">{t('shop.notFound')}</h1>
+        <p className="page-subtitle">{t('shop.notFoundSubtitle')}</p>
         <Link to="/" className="link mt-4 inline-block text-sm">
-          ← Back to shops
+          {t('shop.backToShops')}
         </Link>
       </div>
     )
@@ -114,12 +112,12 @@ export default function ShopStorefront() {
   return (
     <div className="px-6 py-10">
       <Link to="/" className="link text-sm">
-        ← All shops
+        {t('shop.allShops')}
       </Link>
       <h1 className="page-title mt-4">{shop.name}</h1>
 
       {products.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">This shop doesn&apos;t have any products yet.</p>
+        <p className="mt-8 text-sm text-muted">{t('shop.noProducts')}</p>
       ) : (
         <>
           <div className="mt-6">
@@ -131,7 +129,7 @@ export default function ShopStorefront() {
           </div>
 
           {visibleProducts.length === 0 ? (
-            <p className="mt-8 text-sm text-muted">No products in this category.</p>
+            <p className="mt-8 text-sm text-muted">{t('shop.noProductsInCategory')}</p>
           ) : (
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {visibleProducts.map((product) => (
